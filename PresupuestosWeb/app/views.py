@@ -7,6 +7,13 @@ from django.http import HttpRequest
 from django.template import RequestContext
 from datetime import datetime
 
+#NOTA DE PEDIDO
+
+
+
+
+
+
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
