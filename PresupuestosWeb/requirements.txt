@@ -1,4 +1,5 @@
-Django==1.11.14
+Django==2.0.7
+django-jet==1.0.7
 mysqlclient==1.3.12
 pip==9.0.3
 pytz==2018.5
