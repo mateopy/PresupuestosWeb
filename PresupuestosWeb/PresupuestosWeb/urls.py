@@ -15,6 +15,13 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = [
+    #NOTA DE PEDIDO
+    url(r'^pedidos/$', app.views.pedidos, name='pedidos'),
+    url(r'^pedidos/detalle/(?P<id>\S+)$', app.views.pedidos_detalle, name='pedidos_detalle'),
+    url(r'^pedidos/nuevo/$', app.views.pedidos_nuevo, name='pedidos_nuevo'),
+    url(r'^pedidos/editar/(?P<id>\S+)$', app.views.pedidos_editar, name='pedidos_editar'),
+    url(r'^pedidos/eliminar/(?P<id>\S+)$', app.views.pedidos_eliminar, name='pedidos_eliminar'),
+
     # Examples:
     url(r'^$', app.views.home, name='home'),
     url(r'^contact$', app.views.contact, name='contact'),

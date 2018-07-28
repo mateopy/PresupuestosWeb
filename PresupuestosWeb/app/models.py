@@ -5,6 +5,13 @@ Definition of models.
 from django.db import models
 from django.contrib.auth.models import User
 
+ESTADOS_PEDIDO = (
+        ('B', 'Borrador'),
+        ('E', 'En Proceso'),
+        ('R', 'Recepcionado'),
+        
+    )
+
 class NotaPedido(models.Model):
     fecha = models.DateTimeField('Fecha')
     nroPedido = models.IntegerField()
@@ -13,6 +20,7 @@ class NotaPedido(models.Model):
     destino = models.ForeignKey('Dependencia', related_name='dependencia_destino')
     precioAproximado = models.FloatField(default=0)
     descripcionUso = models.CharField(max_length=200)
+    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
 
 
 class NotaPedido_Detalle(models.Model):
