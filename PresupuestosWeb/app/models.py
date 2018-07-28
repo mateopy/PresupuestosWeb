@@ -1,5 +1,7 @@
 """
 Definition of models.
+NOMENCLATURA:
+Nombres de las clases: 
 """
 
 from django.db import models
