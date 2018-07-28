@@ -5,6 +5,7 @@
     <Name>PresupuestosWeb</Name>
     <RootNamespace>PresupuestosWeb</RootNamespace>
     <InterpreterId>MSBuild|env|$(MSBuildProjectFullPath)</InterpreterId>
+    <WebBrowserPort>8040</WebBrowserPort>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>

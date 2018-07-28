@@ -2,7 +2,7 @@ from app.models import *
 from django.contrib import admin
 
 class NotaPedidoInLine(admin.TabularInline):
-    model = NotaPedido_Detalle
+    model = NotaPedidoDetalle
     can_delete = True
     verbose_name_plural = 'Pedidos'
 
