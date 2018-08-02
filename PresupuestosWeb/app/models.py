@@ -71,6 +71,10 @@ class RecepcionDetalle(models.Model):
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
 
+class Usuario(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    departamentoSucursal = models.ForeignKey('DepartamentoSucursal', on_delete=models.CASCADE)
+
 #### TABLAS MENORES ####
 class Articulo(models.Model):
     codigo = models.CharField(max_length=20)
