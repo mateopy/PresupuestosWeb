@@ -1,6 +1,7 @@
 from app.models import *
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
+from django.db.models import When, Case, Value, CharField
 
 class NotaPedidoInLine(admin.TabularInline):
     model = NotaPedidoDetalle
@@ -11,6 +12,23 @@ class NotaPedidoInLine(admin.TabularInline):
 class NotaPedidoAdmin(admin.ModelAdmin):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
     inlines = (NotaPedidoInLine, )
+    list_display = ('nroPedido','fecha','descripcionUso','estado')
+    
+    def get_queryset(self, request):
+        queryset = super(NotaPedidoAdmin, self).get_queryset(request)
+        if request.user.is_superuser: return queryset
+        usuario = Usuario.objects.get(usuario=request.user)
+        if not usuario: return queryset
+        queryset1 = queryset.filter(departamentoDestino=usuario.departamentoSucursal).filter(estado='E')
+        if queryset1.first(): return queryset1
+        queryset = queryset.filter(departamentoOrigen=usuario.departamentoSucursal).filter(estado='B')
+        #queryset = queryset.filter(
+        #        estado = Case(
+        #            When(departamentoOrigen==usuario.departamentoSucursal, then=Value('B') ),
+        #            When(departamentoDestino==usuario.departamentoSucursal, then=Value('E') ),
+        #        ),
+        #    )
+        return queryset
 
 class UsuarioInLine(admin.StackedInline):
     model = Usuario
