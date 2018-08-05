@@ -1,7 +1,11 @@
 from app.models import *
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.db.models import When, Case, Value, CharField
+from django.db.models import When, Case, Value, CharField, Q
+from django.utils.html import format_html
+from django.urls import reverse, path
+from django.conf.urls import url
+from django.http import HttpResponseRedirect
 
 
 class NotaPedidoInLine(admin.TabularInline):
