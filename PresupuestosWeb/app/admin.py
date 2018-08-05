@@ -73,6 +73,26 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         #    )
         return queryset
 
+class NotaRemisionInLine(admin.TabularInline):
+    model = NotaRemisionDetalle
+    can_delete = True
+    verbose_name_plural = 'Remisiones'
+
+
+class NotaRemisionAdmin(admin.ModelAdmin):
+    #readonly_fields = ('fechaCreacion','fechaActualizacion')
+    inlines = (NotaRemisionInLine, )
+    list_display = ('nroRemision','fecha','nroPedido','estado')
+    
+    def get_queryset(self, request):
+        queryset = super(NotaRemisionAdmin, self).get_queryset(request)
+        if request.user.is_superuser: return queryset
+        usuario = Usuario.objects.get(usuario=request.user)
+        if not usuario: return queryset
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        
+        return queryset
+
 class UsuarioInLine(admin.StackedInline):
     model = Usuario
     can_delete=False
