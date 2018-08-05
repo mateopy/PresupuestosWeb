@@ -30,6 +30,12 @@ class NotaPedido(models.Model):
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name_plural = "Notas de Pedido"
+
+    def __str__(self):
+        return str(self.nroPedido)
+
 
 class NotaPedidoDetalle(models.Model):
     notaPedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE)
@@ -47,6 +53,15 @@ class NotaRemision(models.Model):
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name_plural = "Notas de Remisión"
+
+    def __str__(self):
+        return str(self.nroRemision) + " - " + str(self.pedido.nroPedido)
+
+    def nroPedido(self):
+        return self.pedido.nroPedido
+
 
 class NotaRemisionDetalle(models.Model):
     notaRemision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
@@ -62,6 +77,9 @@ class Recepcion(models.Model):
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_destino',on_delete=models.CASCADE)
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name_plural = "Recepciones"
 
 
 class RecepcionDetalle(models.Model):
@@ -86,25 +104,49 @@ class Articulo(models.Model):
     precio = models.FloatField(default=0)
     observaciones = models.CharField(max_length=200)
 
+    def __str__(self):
+        return self.codigo + " - " + self.descripcion
+
 
 class DepartamentoSucursal(models.Model):
     departamento = models.ForeignKey('Departamento',on_delete=models.CASCADE)
     sucursal = models.ForeignKey('Sucursal',on_delete=models.CASCADE)
 
+    class Meta:
+        verbose_name_plural = "Departamentos por Sucursal"
+       
+    def __str__(self):
+        return (str((self.departamento.descripcion)) + " - " + self.sucursal.descripcion)
+
 class Departamento(models.Model):
     descripcion = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.descripcion
     
 
 class Sucursal(models.Model):
     descripcion = models.CharField(max_length=50)
     codigo = models.IntegerField()
 
+    def __str__(self):
+        return self.descripcion
+
 class TipoArticulo(models.Model):
     descripcion = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.descripcion
 
 class CategoriaArticulo(models.Model):
     descripcion = models.CharField(max_length=50)
 
+    def __str__(self):
+        return self.descripcion
+
 class UnidadMedida(models.Model):
     descripcion = models.CharField(max_length=50)
     codigo = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.descripcion
