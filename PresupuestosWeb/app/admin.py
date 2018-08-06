@@ -54,11 +54,14 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     #metodo para cambiar el estado de los pedidos en borrador
     def procesar_pedido(self, request, notapedido_id, *args, **kwargs):
         pedido = self.get_object(request, notapedido_id)
-        if (pedido and pedido.estado == self.BORRADOR):
-            pedido.estado = self.EN_PROCESO
-            pedido.save()
-            url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
-            return HttpResponseRedirect(url)
+        if (pedido):
+            if (pedido.estado == self.BORRADOR):
+                pedido.estado = self.EN_PROCESO
+                pedido.save()
+            else:
+                self.message_user(request, "Pedido Ya Procesado")
+        url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
         #return request
 
     def get_queryset(self, request):
@@ -66,15 +69,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         if request.user.is_superuser: return queryset
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
-        queryset1 = queryset.filter(departamentoDestino=usuario.departamentoSucursal).filter(estado='E')
-        if queryset1.first(): return queryset1
-        queryset = queryset.filter(departamentoOrigen=usuario.departamentoSucursal).filter(estado='B')
-        #queryset = queryset.filter(
-        #        estado = Case(
-        #            When(departamentoOrigen==usuario.departamentoSucursal, then=Value('B') ),
-        #            When(departamentoDestino==usuario.departamentoSucursal, then=Value('E') ),
-        #        ),
-        #    )
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+ 
         return queryset
 
 class NotaRemisionInLine(admin.TabularInline):
@@ -97,6 +93,16 @@ class NotaRemisionAdmin(admin.ModelAdmin):
         
         return queryset
 
+class RecepcionInLine(admin.TabularInline):
+    model = RecepcionDetalle
+    can_delete = True
+    verbore_name_plural = 'Recepciones'
+
+class RecepcionAdmin(admin.ModelAdmin):
+    inlines = (RecepcionInLine,)
+    list_display = ('nroRecepcion','fecha','remision','estado')
+
+
 class UsuarioInLine(admin.StackedInline):
     model = Usuario
     can_delete=False
@@ -110,6 +116,7 @@ admin.site.unregister(User)
 admin.site.register(User, UsuarioAdmin)
 admin.site.register(NotaPedido,NotaPedidoAdmin)
 admin.site.register(NotaRemision,NotaRemisionAdmin)
+admin.site.register(Recepcion, RecepcionAdmin)
 admin.site.register(Articulo)
 admin.site.register(Departamento)
 admin.site.register(Sucursal)
