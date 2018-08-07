@@ -22,11 +22,11 @@ ESTADOS_PEDIDO = (
 
 class NotaPedido(models.Model):
     fecha = models.DateField('Fecha')
-    nroPedido = models.IntegerField()
-    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE)
-    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE)
-    precioAproximado = models.FloatField(default=0)
-    descripcionUso = models.CharField(max_length=200)
+    nroPedido = models.IntegerField(verbose_name="Nro Pedido")
+    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
+    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
+    precioAproximado = models.FloatField(default=0, verbose_name="Precio Aproximado")
+    descripcionUso = models.CharField(max_length=200, verbose_name="Descripción Uso")
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
@@ -40,16 +40,16 @@ class NotaPedido(models.Model):
 class NotaPedidoDetalle(models.Model):
     notaPedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True)
-    articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
+    articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE, verbose_name="Artículo")
 
 
 class NotaRemision(models.Model):
     fecha = models.DateField('Fecha')
-    nroRemision = models.IntegerField()
-    pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE)
-    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_origen',on_delete=models.CASCADE)
-    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_destino',on_delete=models.CASCADE)
+    nroRemision = models.IntegerField(verbose_name="Nro Remisión")
+    pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
+    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
+    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
@@ -66,15 +66,15 @@ class NotaRemision(models.Model):
 class NotaRemisionDetalle(models.Model):
     notaRemision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE)
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,verbose_name="Unidad de Medida")
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
 class Recepcion(models.Model):
     fecha = models.DateField('Fecha')
-    nroRecepcion = models.IntegerField()
+    nroRecepcion = models.IntegerField(verbose_name="Nro Recepción")
     remision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
-    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_origen',on_delete=models.CASCADE)
-    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_destino',on_delete=models.CASCADE)
+    departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
+    departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
@@ -85,7 +85,7 @@ class Recepcion(models.Model):
 class RecepcionDetalle(models.Model):
     recepcion = models.ForeignKey('Recepcion',on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE)
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE, verbose_name="Unidad de Medida")
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
 
@@ -97,9 +97,9 @@ class Usuario(models.Model):
 class Articulo(models.Model):
     codigo = models.CharField(max_length=20)
     descripcion = models.CharField(max_length=50)
-    tipoArticulo = models.ForeignKey('TipoArticulo',on_delete=models.CASCADE)
-    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE)
-    codigoBarras = models.CharField(max_length=50)
+    tipoArticulo = models.ForeignKey('TipoArticulo',on_delete=models.CASCADE, verbose_name="Tipo de Artículo")
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE, verbose_name="Unidad de Medida")
+    codigoBarras = models.CharField(max_length=50, verbose_name="Código de Barras")
     categoria = models.ForeignKey('CategoriaArticulo',on_delete=models.CASCADE)
     precio = models.FloatField(default=0)
     observaciones = models.CharField(max_length=200)
@@ -121,6 +121,9 @@ class DepartamentoSucursal(models.Model):
 class Departamento(models.Model):
     descripcion = models.CharField(max_length=50)
 
+    class Meta:
+        verbose_name_plural = "Departamentos"
+
     def __str__(self):
         return self.descripcion
     
@@ -129,11 +132,17 @@ class Sucursal(models.Model):
     descripcion = models.CharField(max_length=50)
     codigo = models.IntegerField()
 
+    class Meta:
+        verbose_name_plural = "Sucursales"
+
     def __str__(self):
         return self.descripcion
 
 class TipoArticulo(models.Model):
     descripcion = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = "Tipos de Artículo"
 
     def __str__(self):
         return self.descripcion
@@ -141,12 +150,18 @@ class TipoArticulo(models.Model):
 class CategoriaArticulo(models.Model):
     descripcion = models.CharField(max_length=50)
 
+    class Meta:
+        verbose_name_plural = "Categorias de Artículo"
+
     def __str__(self):
         return self.descripcion
 
 class UnidadMedida(models.Model):
     descripcion = models.CharField(max_length=50)
     codigo = models.CharField(max_length=10)
+
+    class Meta:
+        verbose_name_plural = "Unidades de Medida"
 
     def __str__(self):
         return self.descripcion
