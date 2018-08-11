@@ -25,7 +25,7 @@ class NotaPedido(models.Model):
     nroPedido = models.IntegerField(verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
-    precioAproximado = models.FloatField(default=0, verbose_name="Precio Aproximado")
+    precioAproximado = models.CharField(max_length=200, verbose_name="Precio Aproximado")
     descripcionUso = models.CharField(max_length=200, verbose_name="Descripción Uso")
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)

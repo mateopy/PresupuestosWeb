@@ -101,7 +101,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         if request.user.is_superuser: return queryset
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
-        #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
  
         return queryset
     
@@ -112,8 +112,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
             remision.fecha = datetime.date.today()
             remision.nroRemision = pedido.nroPedido
             remision.pedido = pedido
-            remision.departamentoOrigen = pedido.departamentoOrigen
-            remision.departamentoDestino = pedido.departamentoDestino
+            remision.departamentoOrigen = pedido.departamentoDestino
+            remision.departamentoDestino = pedido.departamentoOrigen
             remision.estado = self.BORRADOR
             remision.usuario = request.user
             remision.save()
