@@ -13,6 +13,7 @@ NOMBRES DE ATRIBUTOS:
 
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import datetime
 
 ESTADOS_PEDIDO = (
         ('B', 'Borrador'),
@@ -21,7 +22,7 @@ ESTADOS_PEDIDO = (
     )
 
 class NotaPedido(models.Model):
-    fecha = models.DateField('Fecha')
+    fecha = models.DateField('Fecha', default=datetime.now)
     nroPedido = models.IntegerField(verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")

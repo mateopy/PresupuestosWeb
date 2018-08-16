@@ -1,7 +1,7 @@
 from app.models import *
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from django.db.models import When, Case, Value, CharField, Q
+from django.db.models import Q
 from django.utils.html import format_html
 from django.urls import reverse, path
 from django.conf.urls import url
@@ -23,27 +23,25 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     READ_ONLY = False
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
     inlines = (NotaPedidoInLine,)
+    fields = ('fecha','usuario','nroPedido','departamentoOrigen','departamentoDestino','precioAproximado','descripcionUso','estado')
     list_display = ('nroPedido','fecha','descripcionUso','estado','accion_pedido')
+    readonly_fields = ['fecha','estado','departamentoOrigen']
     ordering = ['nroPedido']
     actions = ['generar_remision']
 
     def get_urls(self):
         urls = super().get_urls()
-        custom_urls = [
-            #url(r'^$', app.views.home, name='home')
+        custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:notapedido_id>)/', self.admin_site.admin_view(self.procesar_pedido), name='pedido_enviar'),
-            path('imprimir/(<int:notapedido_id>)/', self.admin_site.admin_view(self.imprimir_pedido), name='pedido_imprimir'),
-        ]
+            path('imprimir/(<int:notapedido_id>)/', self.admin_site.admin_view(self.imprimir_pedido), name='pedido_imprimir'),]
         return custom_urls + urls
 
     # metodo para agregar el boton en el list del pedido
     def accion_pedido(self, obj):
-        return format_html(
-            '<a class="button" href="{}">Enviar</a>&nbsp;'
+        return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
             '<a class="button" href="{}">Imprimir</a>',
             reverse('admin:pedido_enviar', args=[obj.pk]),
-            reverse('admin:pedido_imprimir', args=[obj.pk]),
-        )
+            reverse('admin:pedido_imprimir', args=[obj.pk]),)
     accion_pedido.short_description = 'Procesar'
     accion_pedido.allow_tags = True
 
@@ -72,9 +70,12 @@ class NotaPedidoAdmin(admin.ModelAdmin):
             return False
         return super().has_add_permission(request)
 
-    def change_view(self, request, object_id, form_url = '', extra_context = None):
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+
         pedido = self.get_object(request, object_id)
-        #if request.user.is_superuser: return super(NotaPedidoAdmin, self).change_view(request, object_id, form_url, extra_context=extra_context)
+        #if request.user.is_superuser: return super(NotaPedidoAdmin,
+        #self).change_view(request, object_id, form_url,
+        #extra_context=extra_context)
         self.READ_ONLY = False
         if (pedido and pedido.estado != self.BORRADOR):
             self.READ_ONLY = True
@@ -95,8 +96,14 @@ class NotaPedidoAdmin(admin.ModelAdmin):
             for inline in self.inlines:
                 inline.readonly_fields = []
         return super(NotaPedidoAdmin, self).change_view(request, object_id, form_url, extra_context=extra_context)
+    
+    def get_changeform_initial_data(self, request):
+        data = super(NotaPedidoAdmin, self).get_changeform_initial_data(request)
+        data['usuario'] = request.user
+        data['departamentoOrigen'] = request.user.usuario.departamentoSucursal
+        return data
 
-    def get_queryset(self, request):
+    def get_queryset(self, request):    
         queryset = super(NotaPedidoAdmin, self).get_queryset(request)
         if request.user.is_superuser: return queryset
         usuario = Usuario.objects.get(usuario=request.user)
@@ -129,8 +136,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         if contador == 1:
             mensaje = "1 Remision Generada"
         else:
-            mensaje = "%s Remisiones Generadas " %contador
-        self.message_user(request,"%s Satisfactoriamente" %mensaje)
+            mensaje = "%s Remisiones Generadas " % contador
+        self.message_user(request,"%s Satisfactoriamente" % mensaje)
 
 
     #metodo para actualizar de forma masiva los pedidos marcados
@@ -139,8 +146,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         if filas == 1:
             mensaje = "1 Pedido Procesado"
         else:
-            mensaje = "%s Pedidos Procesados " %filas
-        self.message_user(request, "%s Satisfacoriamente" %mensaje)
+            mensaje = "%s Pedidos Procesados " % filas
+        self.message_user(request, "%s Satisfacoriamente" % mensaje)
     actualizar_estado.short_description = "Procesar Pedidos"
 
 class NotaRemisionInLine(admin.TabularInline):
@@ -151,7 +158,7 @@ class NotaRemisionInLine(admin.TabularInline):
 
 class NotaRemisionAdmin(admin.ModelAdmin):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
-    inlines = (NotaRemisionInLine, )
+    inlines = (NotaRemisionInLine,)
     list_display = ('nroRemision','fecha','nroPedido','estado')
     
     def get_queryset(self, request):
@@ -175,11 +182,11 @@ class RecepcionAdmin(admin.ModelAdmin):
 
 class UsuarioInLine(admin.StackedInline):
     model = Usuario
-    can_delete=False
+    can_delete = False
     verbose_name_plural = 'Perfiles'
 
 class UsuarioAdmin(UserAdmin):
-    inlines = (UsuarioInLine, )
+    inlines = (UsuarioInLine,)
 
 # Re-register UserAdmin
 admin.site.unregister(User)
