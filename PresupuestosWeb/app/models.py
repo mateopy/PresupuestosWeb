@@ -26,8 +26,8 @@ class NotaPedido(models.Model):
     nroPedido = models.IntegerField(verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
-    precioAproximado = models.CharField(max_length=200, verbose_name="Precio Aproximado")
-    descripcionUso = models.CharField(max_length=200, verbose_name="Descripción Uso")
+    precioAproximado = models.CharField(max_length=200, verbose_name="Precio Aproximado", null=True, blank=True)
+    descripcionUso = models.CharField(max_length=200, verbose_name="Descripción Uso", null=True, blank=True)
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
@@ -46,7 +46,7 @@ class NotaPedidoDetalle(models.Model):
 
 
 class NotaRemision(models.Model):
-    fecha = models.DateField('Fecha')
+    fecha = models.DateField('Fecha', default=datetime.now)
     nroRemision = models.IntegerField(verbose_name="Nro Remisión")
     pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
@@ -86,6 +86,7 @@ class Recepcion(models.Model):
 class RecepcionDetalle(models.Model):
     recepcion = models.ForeignKey('Recepcion',on_delete=models.CASCADE)
     cantidad = models.IntegerField()
+    cantidadRecivida = models.IntegerField()
     unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE, verbose_name="Unidad de Medida")
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
