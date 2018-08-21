@@ -15,7 +15,8 @@ class NotaPedidoInLine(admin.TabularInline):
     model = NotaPedidoDetalle
     can_delete = True
     verbose_name_plural = 'Pedidos'
-    fields = ('notaPedido','cantidad','unidadMedida','articulo')
+    #fields = ('notaPedido','cantidad','unidadMedida','articulo')
+    fields = ('notaPedido','articulo','cantidad','unidadMedida')
     
 
 
@@ -55,7 +56,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         return form
 
     def get_max_nroPedido(self, request):
-        qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen=request.user.usuario.departamentoSucursal)
+        qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
         if len(qpedido):
             nropedido = int(qpedido[0].nroPedido+1)
         else:
@@ -172,20 +173,21 @@ class NotaPedidoAdmin(admin.ModelAdmin):
                     detalle.articulo = inline.articulo
                     detalle.save()
                 contador+=1
-            except Exception as a:
-                self.message_user(request, a)
+            except:
                 self.message_user(request, "Ocurrio un error durante la generacion, verificar Pedidos")
         if contador == 1:
             mensaje = "1 Remision Generada"
         else:
             mensaje = "%s Remisiones Generadas " % contador
         self.message_user(request,"%s Satisfactoriamente" % mensaje)
+    generar_remision.short_description = "Generar Remision/es"
 
 class NotaRemisionInLine(admin.TabularInline):
     model = NotaRemisionDetalle
     can_delete = True
     verbose_name_plural = 'Remisiones'
-    fields = ('notaRemision','cantidad','unidadMedida','articulo')
+    #fields = ('notaRemision','cantidad','unidadMedida','articulo')
+    fields = ('notaRemision','articulo','cantidad','unidadMedida')
 
 
 class NotaRemisionAdmin(admin.ModelAdmin):
@@ -291,12 +293,13 @@ class NotaRemisionAdmin(admin.ModelAdmin):
         if request.user.is_superuser: return queryset
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(departamentoDestino=usuario.departamentoSucursal))
         
         return queryset
 
     def get_max_nroRemision(self, request):
-        qremision = NotaRemision.objects.annotate(Max('nroRemision')).filter(departamentoDestino=request.user.usuario.departamentoSucursal)
+        qremision = NotaRemision.objects.annotate(Max('nroRemision')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
         if len(qremision):
             nroRemision = int(qremision[0].nroRemision+1)
         else:
@@ -310,7 +313,7 @@ class NotaRemisionAdmin(admin.ModelAdmin):
             try:
                 recepcion = Recepcion()
                 recepcion.fecha = datetime.date.today()
-                recepcion.nroRecepcion = remision.nroRemision
+                recepcion.nroRecepcion = RecepcionAdmin.get_max_nroRecepcion(self, request)
                 recepcion.remision = remision
                 recepcion.departamentoOrigen = remision.departamentoDestino
                 recepcion.departamentoDestino = remision.departamentoOrigen
@@ -319,18 +322,19 @@ class NotaRemisionAdmin(admin.ModelAdmin):
                 recepcion.save()
                 for inline in recepcion.recepciondetalle_set.all():
                     detalle = RecepcionDetalle()
-                    detalle.notaRemision = remision
+                    detalle.recepcion = recepcion
                     detalle.cantidad = inline.cantidad
                     detalle.unidadMedida = inline.unidadMedida
                     detalle.articulo = inline.articulo
                     detalle.save()
                 contador+=1
-            except:
-                self.message_user("Ocurrio un error durante la generacion, verificar remision/es")
+            except Exception as e:
+                #self.message_user(request, str(e))
+                self.message_user(request, "Ocurrio un error durante la generacion, verificar remision/es")
         if contador == 1:
-            mensaje = "1 Remision Generada"
+            mensaje = "1 Recepcion Generada"
         else:
-            mensaje = "%s Remisiones Generadas " % contador
+            mensaje = "%s Recepciones Generadas " % contador
         self.message_user(request,"%s Satisfactoriamente" % mensaje)
     generar_recepcion.short_description = "Generar Recepcion/es"
 
@@ -343,6 +347,14 @@ class RecepcionAdmin(admin.ModelAdmin):
     inlines = (RecepcionInLine,)
     list_display = ('nroRecepcion','fecha','remision','estado')
 
+    def get_max_nroRecepcion(self, request):
+        qrecepcion = Recepcion.objects.annotate(Max('nroRecepcion')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
+        if len(qrecepcion):
+            nroRecepcion = int(qrecepcion[0].nro+1)
+        else:
+            nroRecepcion = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+
+        return nroRecepcion
 
 class UsuarioInLine(admin.StackedInline):
     model = Usuario

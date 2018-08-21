@@ -86,7 +86,6 @@ class Recepcion(models.Model):
 class RecepcionDetalle(models.Model):
     recepcion = models.ForeignKey('Recepcion',on_delete=models.CASCADE)
     cantidad = models.IntegerField()
-    cantidadRecivida = models.IntegerField()
     unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE, verbose_name="Unidad de Medida")
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
