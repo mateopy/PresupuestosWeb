@@ -204,8 +204,9 @@ class NotaRemisionAdmin(admin.ModelAdmin):
     READ_ONLY = False
     inlines = (NotaRemisionInLine,)
     fields = ('fecha','usuario','nroRemision','pedido','departamentoOrigen','departamentoDestino','estado')
-    list_display = ('nroRemision','fecha','nroPedido','estado','accion_remision')
+    list_display = ('nroRemision','fecha','nroPedido','departamentoOrigen','departamentoDestino','estado','accion_remision')
     readonly_fields = ('fecha','estado')
+    list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
     ordering = ['nroRemision']
     actions = ['generar_recepcion']
     
@@ -355,7 +356,9 @@ class RecepcionInLine(admin.TabularInline):
 
 class RecepcionAdmin(admin.ModelAdmin):
     inlines = (RecepcionInLine,)
-    list_display = ('nroRecepcion','fecha','remision','estado')
+    list_display = ('nroRecepcion','fecha','remision','departamentoOrigen','departamentoDestino','estado')
+    list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
+
 
     def get_max_nroRecepcion(self, request):
         try:
