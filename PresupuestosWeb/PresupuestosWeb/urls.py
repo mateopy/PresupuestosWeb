@@ -26,6 +26,7 @@ urlpatterns = [
     url(r'^$', app.views.home, name='home'),
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
+    url(r'^admin/app/notapedido/imprimir/(?P<id>\S+)$', app.views.reporte_nota_pedido, name='reporte_nota_pedido'),
     url(r'^login/$',
         django.contrib.auth.views.login,
         {

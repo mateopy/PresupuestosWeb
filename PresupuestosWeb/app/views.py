@@ -1,4 +1,4 @@
-"""
+﻿"""
 Definition of views.
 """
 from app.models import *
@@ -7,6 +7,12 @@ from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpRequest
 from django.template import RequestContext
+from app.functions import *
+from app.reports import *
+
+
+def reporte_nota_pedido(request,id):
+    return nota_pedido_report(request,id)
 
 
 
@@ -93,6 +99,7 @@ def pedidos_eliminar(request,id):
 
 
 
+    
 
 
 def home(request):

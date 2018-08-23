@@ -9,6 +9,8 @@ from django.http import HttpResponseRedirect
 from django.forms import HiddenInput
 import datetime
 from app.forms import PedidoForm
+import app.views
+import app.reports
 
 
 class NotaPedidoInLine(admin.TabularInline):
@@ -36,7 +38,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:notapedido_id>)/', self.admin_site.admin_view(self.procesar_pedido), name='pedido_enviar'),
-            path('imprimir/(<int:notapedido_id>)/', self.admin_site.admin_view(self.imprimir_pedido), name='pedido_imprimir'),]
+            path('imprimir/<int:notapedido_id>', app.reports.nota_pedido_report, name='pedido_imprimir'),]
         return custom_urls + urls
     
     def get_form(self, request, obj = None, **kwargs):
@@ -67,7 +69,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     # metodo para agregar el boton en el list del pedido
     def accion_pedido(self, obj):
         return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:pedido_enviar', args=[obj.pk]),
             reverse('admin:pedido_imprimir', args=[obj.pk]),)
     accion_pedido.short_description = 'Procesar'
