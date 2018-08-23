@@ -19,7 +19,7 @@ class NotaPedidoInLine(admin.TabularInline):
     verbose_name_plural = 'Pedidos'
     #fields = ('notaPedido','cantidad','unidadMedida','articulo')
     fields = ('notaPedido','articulo','cantidad','unidadMedida')
-    
+
 
 
 class NotaPedidoAdmin(admin.ModelAdmin):
@@ -58,9 +58,13 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         return form
 
     def get_max_nroPedido(self, request):
-        qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
-        if len(qpedido):
-            nropedido = int(qpedido[0].nroPedido+1)
+        #qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
+        try:
+            qpedido = NotaPedido.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroPedido')
+        except:
+            qpedido = None
+        if qpedido:
+            nropedido = int(qpedido.nroPedido+1)
         else:
            nropedido = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
 
@@ -150,7 +154,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
         #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
  
         return queryset
 
@@ -301,9 +305,12 @@ class NotaRemisionAdmin(admin.ModelAdmin):
         return queryset
 
     def get_max_nroRemision(self, request):
-        qremision = NotaRemision.objects.annotate(Max('nroRemision')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
-        if len(qremision):
-            nroRemision = int(qremision[0].nroRemision+1)
+        try:
+            qremision = NotaRemision.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRemision')
+        except:
+            qremision = None
+        if qremision:
+            nroRemision = int(qremision.nroRemision+1)
         else:
             nroRemision = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
 
@@ -350,9 +357,12 @@ class RecepcionAdmin(admin.ModelAdmin):
     list_display = ('nroRecepcion','fecha','remision','estado')
 
     def get_max_nroRecepcion(self, request):
-        qrecepcion = Recepcion.objects.annotate(Max('nroRecepcion')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
-        if len(qrecepcion):
-            nroRecepcion = int(qrecepcion[0].nro+1)
+        try:
+            qrecepcion = Recepcion.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRecepcion')
+        except:
+            qrecepcion = None
+        if qrecepcion:
+            nroRecepcion = int(qrecepcion.nroRecepcion+1)
         else:
             nroRecepcion = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
 
