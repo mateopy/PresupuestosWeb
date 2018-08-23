@@ -29,7 +29,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
     inlines = (NotaPedidoInLine,)
     fields = ('fecha','usuario','nroPedido','departamentoOrigen','departamentoDestino','precioAproximado','descripcionUso','estado')
-    list_display = ('nroPedido','fecha','descripcionUso','estado','accion_pedido')
+    list_display = ('nroPedido','fecha','departamentoOrigen','departamentoDestino','descripcionUso','estado','accion_pedido')
+    list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
     readonly_fields = ('fecha','estado')
     ordering = ['nroPedido']
     actions = ['generar_remision']
