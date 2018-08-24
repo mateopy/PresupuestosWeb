@@ -18,7 +18,7 @@ from datetime import datetime
 ESTADOS_PEDIDO = (
         ('B', 'Borrador'),
         ('E', 'En Proceso'),
-        ('R', 'Recepcionado'),
+        ('P', 'Procesado'),
     )
 
 class NotaPedido(models.Model):
