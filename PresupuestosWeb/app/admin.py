@@ -155,7 +155,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
         #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal))
  
         return queryset
 
@@ -302,7 +302,7 @@ class NotaRemisionAdmin(admin.ModelAdmin):
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
         #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(departamentoDestino=usuario.departamentoSucursal))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal))
         
         return queryset
 
