@@ -25,6 +25,7 @@ class NotaPedidoInLine(admin.TabularInline):
 class NotaPedidoAdmin(admin.ModelAdmin):
     BORRADOR = 'B'
     EN_PROCESO = 'E'
+    PROCESADO = 'P'
     READ_ONLY = False
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
     inlines = (NotaPedidoInLine,)
@@ -38,7 +39,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
-            path('procesar/(<int:notapedido_id>)/', self.admin_site.admin_view(self.procesar_pedido), name='pedido_enviar'),
+            path('procesar/(<int:notapedido_id>)/', self.admin_site.admin_view(self.enviar_pedido), name='pedido_enviar'),
             path('imprimir/<int:notapedido_id>', app.reports.nota_pedido_report, name='pedido_imprimir'),]
         return custom_urls + urls
     
@@ -73,7 +74,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
 
     # metodo para agregar el boton en el list del pedido
     def accion_pedido(self, obj):
-        return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
+        return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
             '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:pedido_enviar', args=[obj.pk]),
             reverse('admin:pedido_imprimir', args=[obj.pk]),)
@@ -81,34 +82,42 @@ class NotaPedidoAdmin(admin.ModelAdmin):
     accion_pedido.allow_tags = True
 
     #metodo para cambiar procesar los pedidos
-    def procesar_pedido(self, request, notapedido_id, *args, **kwargs):
+    def enviar_pedido(self, request, notapedido_id, *args, **kwargs):
         pedido = self.get_object(request, notapedido_id)
         if (pedido):
             if (pedido.estado == self.BORRADOR):
                 pedido.estado = self.EN_PROCESO
                 pedido.save()
             else:
-                self.message_user(request, "Pedido Ya Procesado")
+                self.message_user(request, "Pedido ya se encuentra en proceso")
         url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
         return HttpResponseRedirect(url)
-    
-    #metodo para imprimir el pedido
-    def imprimir_pedido(self, request, notapedido_id, *args, **kwargs):
-        pedido = self.get_object(request, notapedido_id)
-        if (pedido and pedido.estado != self.BORRADOR):
-            pass
-        url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
-        return HttpResponseRedirect(url)
+
+    #def procesar_pedido(self, request, queryset):
+    #    contador = 0
+    #    pedidos = []
+    #    for pedido in queryset:
+    #        try:
+    #            if (pedido.estado == self.EN_PROCESO):
+    #                pedido.estado = self.PROCESADO
+    #                pedido.save()
+    #                contador += 1
+    #            else:
+    #                pedidos.append(pedido.nroPedido)
+    #        except:
+    #            pass
+    #    if contador > 0:
+    #        self.message_user(request, "Se proceso/aron %s nota de pedido/s" %contador)
+    #    if len(pedidos) > 0:
+    #        self.message_user(request, "Los siguientes pedidos ya fueron procesados: %s " %str(pedidos))
+    #    url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
+    #    return HttpResponseRedirect(url)
+
 
     def has_add_permission(self, request):
         if self.READ_ONLY:
             return False
         return super(NotaPedidoAdmin, self).has_add_permission(request)
-
-    #def has_delete_permission(self, request, obj = None):
-    #    if self.READ_ONLY:
-    #        return False
-    #    return super(NotaPedidoAdmin, self).has_delete_permission(request, obj)
 
     def changelist_view(self, request, extra_context = None):
         self.READ_ONLY = False
@@ -117,16 +126,9 @@ class NotaPedidoAdmin(admin.ModelAdmin):
             inline.readonly_fields = []
         return super(NotaPedidoAdmin, self).changelist_view(request, extra_context)
 
-    #def add_view(self, request, form_url = '', extra_context = None):
-    #    self.readonly_fields = ('fecha, estado')
-    #    return super(NotaPedidoAdmin, self).add_view(request, form_url, extra_context)
-
     def change_view(self, request, object_id, form_url='', extra_context=None):
 
         pedido = self.get_object(request, object_id)
-        #if request.user.is_superuser: return super(NotaPedidoAdmin,
-        #self).change_view(request, object_id, form_url,
-        #extra_context=extra_context)
         self.READ_ONLY = False
         if (pedido and pedido.estado != self.BORRADOR):
             self.READ_ONLY = True
@@ -155,7 +157,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
         #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(Q(departamentoDestino=usuario.departamentoSucursal), ~Q(estado='B')))
  
         return queryset
 
@@ -165,7 +167,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
             try:
                 remision = NotaRemision()
                 remision.fecha = datetime.date.today()
-                remision.nroRemision = NotaRemisionAdmin.get_max_nroRemision(self, request)
+                remision.nroRemision = NotaRemisionAdmin.get_max_nroRemision(self, request, True)
                 remision.pedido = pedido
                 remision.departamentoOrigen = pedido.departamentoDestino
                 remision.departamentoDestino = pedido.departamentoOrigen
@@ -180,7 +182,8 @@ class NotaPedidoAdmin(admin.ModelAdmin):
                     detalle.articulo = inline.articulo
                     detalle.save()
                 contador+=1
-            except:
+                NotaPedido.objects.filter(nroPedido=pedido.nroPedido).update(estado=self.PROCESADO)
+            except Exception as e:
                 self.message_user(request, "Ocurrio un error durante la generacion, verificar Pedidos")
         if contador == 1:
             mensaje = "1 Remision Generada"
@@ -201,6 +204,7 @@ class NotaRemisionAdmin(admin.ModelAdmin):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
     BORRADOR = 'B'
     EN_PROCESO = 'E'
+    PROCESADO = 'P'
     READ_ONLY = False
     inlines = (NotaRemisionInLine,)
     fields = ('fecha','usuario','nroRemision','pedido','departamentoOrigen','departamentoDestino','estado')
@@ -302,13 +306,16 @@ class NotaRemisionAdmin(admin.ModelAdmin):
         usuario = Usuario.objects.get(usuario=request.user)
         if not usuario: return queryset
         #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
-        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(Q(departamentoDestino=usuario.departamentoSucursal), ~Q(estado='B')))
         
         return queryset
 
-    def get_max_nroRemision(self, request):
+    def get_max_nroRemision(self, request, generar=False):
         try:
-            qremision = NotaRemision.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRemision')
+            if generar:
+                qremision = NotaRemision.objects.latest('nroRemision')
+            else:
+                qremision = NotaRemision.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRemision')
         except:
             qremision = None
         if qremision:
@@ -324,14 +331,14 @@ class NotaRemisionAdmin(admin.ModelAdmin):
             try:
                 recepcion = Recepcion()
                 recepcion.fecha = datetime.date.today()
-                recepcion.nroRecepcion = RecepcionAdmin.get_max_nroRecepcion(self, request)
+                recepcion.nroRecepcion = RecepcionAdmin.get_max_nroRecepcion(self, request, True)
                 recepcion.remision = remision
                 recepcion.departamentoOrigen = remision.departamentoDestino
-                recepcion.departamentoDestino = remision.departamentoOrigen
+                recepcion.departamentoDestino = remision.departamentoOrigen 
                 recepcion.estado = self.BORRADOR
                 recepcion.usuario = request.user
                 recepcion.save()
-                for inline in recepcion.recepciondetalle_set.all():
+                for inline in remision.notaremisiondetalle_set.all():
                     detalle = RecepcionDetalle()
                     detalle.recepcion = recepcion
                     detalle.cantidad = inline.cantidad
@@ -339,6 +346,7 @@ class NotaRemisionAdmin(admin.ModelAdmin):
                     detalle.articulo = inline.articulo
                     detalle.save()
                 contador+=1
+                NotaRemision.objects.filter(nroRemision=remision.nroRemision).update(estado=self.PROCESADO)
             except Exception as e:
                 #self.message_user(request, str(e))
                 self.message_user(request, "Ocurrio un error durante la generacion, verificar remision/es")
@@ -355,14 +363,20 @@ class RecepcionInLine(admin.TabularInline):
     verbore_name_plural = 'Recepciones'
 
 class RecepcionAdmin(admin.ModelAdmin):
+    BORRADOR = 'B'
+    EN_PROCESO = 'E'
+    PROCESADO = 'P'
     inlines = (RecepcionInLine,)
-    list_display = ('nroRecepcion','fecha','remision','departamentoOrigen','departamentoDestino','estado')
+    list_display = ('nroRecepcion','fecha','remision','departamentoOrigen','departamentoDestino','estado','accion_recepcion')
     list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
 
 
-    def get_max_nroRecepcion(self, request):
+    def get_max_nroRecepcion(self, request, generar=False):
         try:
-            qrecepcion = Recepcion.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRecepcion')
+            if generar:
+                qrecepcion = Recepcion.objects.latest('nroRecepcion')
+            else:
+                qrecepcion = Recepcion.objects.filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal).latest('nroRecepcion')
         except:
             qrecepcion = None
         if qrecepcion:
@@ -371,6 +385,40 @@ class RecepcionAdmin(admin.ModelAdmin):
             nroRecepcion = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
 
         return nroRecepcion
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [#url(r'^$', app.views.home, name='home')
+            path('procesar/(<int:recepcion_id>)/', self.admin_site.admin_view(self.procesar_recepcion), name='recepcion_enviar'),
+            path('imprimir/(<int:recepcion_id>)/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
+        return custom_urls + urls
+
+    def accion_recepcion(self, obj):
+        return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
+            '<a class="button" href="{}">Imprimir</a>',
+            reverse('admin:recepcion_enviar', args=[obj.pk]),
+            reverse('admin:recepcion_imprimir', args=[obj.pk]),)
+    accion_recepcion.short_description = 'Procesar'
+    accion_recepcion.allow_tags = True
+
+    def procesar_recepcion(self, request, recepcion_id, *args, **kwargs):
+        recepcion = self.get_object(request, recepcion_id)
+        if (recepcion):
+            if (recepcion.estado == self.BORRADOR):
+                recepcion.estado = self.PROCESADO
+                recepcion.save()
+            else:
+                self.message_user(request, "Recepcion Ya Procesada")
+        url = reverse('admin:app_recepcion_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    #metodo para imprimir el pedido
+    def imprimir_recepcion(self, request, recepcion_id, *args, **kwargs):
+        recepcion = self.get_object(request, recepcion_id)
+        if (recepcion and recepcion.estado != self.BORRADOR):
+            pass
+        url = reverse('admin:app_recepcion_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
 
 class UsuarioInLine(admin.StackedInline):
     model = Usuario
