@@ -74,7 +74,7 @@ class NotaPedidoAdmin(admin.ModelAdmin):
 
     # metodo para agregar el boton en el list del pedido
     def accion_pedido(self, obj):
-        return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
+        return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
             '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:pedido_enviar', args=[obj.pk]),
             reverse('admin:pedido_imprimir', args=[obj.pk]),)
@@ -361,13 +361,18 @@ class RecepcionInLine(admin.TabularInline):
     model = RecepcionDetalle
     can_delete = True
     verbore_name_plural = 'Recepciones'
+    fields = ('recepcion','articulo','cantidad','unidadMedida')
 
 class RecepcionAdmin(admin.ModelAdmin):
     BORRADOR = 'B'
     EN_PROCESO = 'E'
     PROCESADO = 'P'
+    READ_ONLY = False
     inlines = (RecepcionInLine,)
-    list_display = ('nroRecepcion','fecha','remision','departamentoOrigen','departamentoDestino','estado','accion_recepcion')
+    list_display = ('nroRecepcion','fecha','departamentoOrigen','departamentoDestino','estado','accion_recepcion')
+    fields = ('fecha','usuario','nroRecepcion','remision','departamentoOrigen','departamentoDestino','estado')
+    read_only_fields = ('fecha','estado',)
+    ordering = ['nroRecepcion']
     list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
 
 
@@ -389,19 +394,19 @@ class RecepcionAdmin(admin.ModelAdmin):
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
-            path('procesar/(<int:recepcion_id>)/', self.admin_site.admin_view(self.procesar_recepcion), name='recepcion_enviar'),
+            path('procesar/(<int:recepcion_id>)/', self.admin_site.admin_view(self.confirmar_recepcion), name='recepcion_confirmar'),
             path('imprimir/(<int:recepcion_id>)/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
         return custom_urls + urls
 
     def accion_recepcion(self, obj):
-        return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
+        return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
             '<a class="button" href="{}">Imprimir</a>',
-            reverse('admin:recepcion_enviar', args=[obj.pk]),
+            reverse('admin:recepcion_confirmar', args=[obj.pk]),
             reverse('admin:recepcion_imprimir', args=[obj.pk]),)
     accion_recepcion.short_description = 'Procesar'
     accion_recepcion.allow_tags = True
 
-    def procesar_recepcion(self, request, recepcion_id, *args, **kwargs):
+    def confirmar_recepcion(self, request, recepcion_id, *args, **kwargs):
         recepcion = self.get_object(request, recepcion_id)
         if (recepcion):
             if (recepcion.estado == self.BORRADOR):
@@ -419,6 +424,69 @@ class RecepcionAdmin(admin.ModelAdmin):
             pass
         url = reverse('admin:app_recepcion_changelist',current_app=request.resolver_match.namespace)
         return HttpResponseRedirect(url)
+
+    def get_form(self, request, obj = None, **kwargs):
+        form = super(RecepcionAdmin, self).get_form(request, obj, **kwargs)
+        if (form.base_fields):
+            if not (form.base_fields['usuario'].initial):
+                form.base_fields['usuario'].initial = request.user
+                form.base_fields['usuario'].widget = HiddenInput()
+            if not (form.base_fields['departamentoOrigen'].initial):
+                form.base_fields['departamentoOrigen'].initial = request.user.usuario.departamentoSucursal.pk
+                form.base_fields['departamentoOrigen'].disabled = True
+                form.base_fields['departamentoOrigen'].widget.can_add_related = False
+                form.base_fields['departamentoOrigen'].widget.can_change_related = False
+            if not (form.base_fields['nroRecepcion'].initial):
+                form.base_fields['nroRecepcion'].initial = self.get_max_nroRecepcion(request)
+                form.base_fields['nroRecepcion'].disabled = True
+            if (form.base_fields['remision'].initial):
+                form.base_fields['remision'].widget = HiddenInput()
+        return form
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        recepcion = self.get_object(request, object_id)
+        self.READ_ONLY = False
+        if (recepcion and recepcion.estado != self.BORRADOR):
+            self.READ_ONLY = True
+            extra_context = extra_context or {}
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_delete'] = False
+            extra_context['show_save'] = False
+            extra_context['show_save_and_add_another'] = False
+            variables = []
+            for field in self.get_fields(request):
+                variables.append(field)
+            self.readonly_fields = tuple(variables)
+
+            for inline in self.inlines:
+                inline.readonly_fields = tuple(inline.get_fields(inline, request))
+        else:
+            self.readonly_fields = ('fecha', 'estado') #self.get_readonly_fields(request)
+            for inline in self.inlines:
+                inline.readonly_fields = []#inline.get_readonly_fields(inline, request)
+        return super(RecepcionAdmin, self).change_view(request, object_id, form_url, extra_context=extra_context)
+
+    def has_add_permission(self, request):
+        if self.READ_ONLY:
+            return False
+        return super(RecepcionAdmin, self).has_add_permission(request)
+
+    def changelist_view(self, request, extra_context = None):
+        self.READ_ONLY = False
+        self.readonly_fields = ('fecha','estado')
+        for inline in self.inlines:
+            inline.readonly_fields = []
+        return super(RecepcionAdmin, self).changelist_view(request, extra_context)
+
+    def get_queryset(self, request):
+        queryset = super(RecepcionAdmin, self).get_queryset(request)
+        if request.user.is_superuser: return queryset
+        usuario = Usuario.objects.get(usuario=request.user)
+        if not usuario: return queryset
+        #queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal, estado='B') | Q(departamentoDestino=usuario.departamentoSucursal, estado='E'))
+        queryset = queryset.filter(Q(departamentoOrigen=usuario.departamentoSucursal) | Q(Q(departamentoDestino=usuario.departamentoSucursal), ~Q(estado='B')))
+        
+        return queryset
 
 class UsuarioInLine(admin.StackedInline):
     model = Usuario

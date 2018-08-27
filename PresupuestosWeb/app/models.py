@@ -71,7 +71,7 @@ class NotaRemisionDetalle(models.Model):
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
 class Recepcion(models.Model):
-    fecha = models.DateField('Fecha')
+    fecha = models.DateField('Fecha', default=datetime.now)
     nroRecepcion = models.IntegerField(verbose_name="Nro Recepción")
     remision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
