@@ -14,6 +14,7 @@ NOMBRES DE ATRIBUTOS:
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
+from django.utils import timezone
 
 ESTADOS_PEDIDO = (
         ('B', 'Borrador'),
@@ -22,8 +23,8 @@ ESTADOS_PEDIDO = (
     )
 
 class NotaPedido(models.Model):
-    fecha = models.DateField('Fecha', default=datetime.now)
-    nroPedido = models.IntegerField(verbose_name="Nro Pedido")
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroPedido = models.IntegerField(verbose_name="Nro Pedido",blank=True, null=True)
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
     precioAproximado = models.CharField(max_length=200, verbose_name="Precio Aproximado", null=True, blank=True)
@@ -46,8 +47,8 @@ class NotaPedidoDetalle(models.Model):
 
 
 class NotaRemision(models.Model):
-    fecha = models.DateField('Fecha', default=datetime.now)
-    nroRemision = models.IntegerField(verbose_name="Nro Remisión")
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroRemision = models.IntegerField(verbose_name="Nro Remisión",blank=True, null=True)
     pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
@@ -71,8 +72,8 @@ class NotaRemisionDetalle(models.Model):
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE)
 
 class Recepcion(models.Model):
-    fecha = models.DateField('Fecha', default=datetime.now)
-    nroRecepcion = models.IntegerField(verbose_name="Nro Recepción")
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroRecepcion = models.IntegerField(verbose_name="Nro Recepción",blank=True, null=True)
     remision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
@@ -103,7 +104,7 @@ class Articulo(models.Model):
     codigoBarras = models.CharField(max_length=50, verbose_name="Código de Barras")
     categoria = models.ForeignKey('CategoriaArticulo',on_delete=models.CASCADE)
     precio = models.FloatField(default=0)
-    observaciones = models.CharField(max_length=200)
+    observaciones = models.CharField(max_length=200, blank=True, null=True)
 
     def __str__(self):
         return self.codigo + " - " + self.descripcion
