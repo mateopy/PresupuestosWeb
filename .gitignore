@@ -272,3 +272,8 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/PresupuestosWeb/app/static/app/app/app/app/admin
+/PresupuestosWeb/app/static/app/app/app/jet
+/PresupuestosWeb/app/static/app/app/app/jet.dashboard
+/PresupuestosWeb/app/static/app/app/app/range_filter/css
+/PresupuestosWeb/app/static/app/app/app/app
