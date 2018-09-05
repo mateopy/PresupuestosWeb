@@ -26,7 +26,7 @@ urlpatterns = [
     url(r'^$', app.views.home, name='home'),
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
-    url(r'^admin/app/notapedido/imprimir/(?P<id>\S+)$', app.views.reporte_nota_pedido, name='reporte_nota_pedido'),
+    url(r'^administracion/app/notapedido/imprimir/(?P<id>\S+)$', app.views.reporte_nota_pedido, name='reporte_nota_pedido'),
     url(r'^login/$',
         django.contrib.auth.views.login,
         {
@@ -52,5 +52,5 @@ urlpatterns = [
     # Uncomment the next line to enable the admin:
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
-    url(r'^admin/', admin.site.urls),
+    url(r'^administracion/', admin.site.urls),
 ]

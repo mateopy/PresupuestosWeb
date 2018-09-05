@@ -394,8 +394,18 @@ class RecepcionAdmin(Nota):
             #    form.base_fields['remision'].widget = HiddenInput()
         return form
 
+class SolicitudPresupuestoInLine(admin.TabularInline):
+    model = SolicitudPresupuestoDetalle
+    can_delete = True
+    verbore_name_plural = 'Artículos'
+    #fields = ('recepcion','articulo','cantidad','unidadMedida')
+    #extra = 2
 
-class UsuarioInLine(admin.StackedInline):
+class SolicitudPresupuestoAdmin(admin.ModelAdmin):
+    inlines = (SolicitudPresupuestoInLine,)
+
+
+class UsuarioInLine(admin.TabularInline):
     model = Usuario
     can_delete = False
     verbose_name_plural = 'Perfiles'
@@ -409,6 +419,7 @@ admin.site.register(User, UsuarioAdmin)
 admin.site.register(NotaPedido,NotaPedidoAdmin)
 admin.site.register(NotaRemision,NotaRemisionAdmin)
 admin.site.register(Recepcion, RecepcionAdmin)
+admin.site.register(SolicitudPresupuesto, SolicitudPresupuestoAdmin)
 admin.site.register(Articulo)
 admin.site.register(Departamento)
 admin.site.register(Sucursal)

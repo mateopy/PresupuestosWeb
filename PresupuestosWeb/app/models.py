@@ -22,6 +22,35 @@ ESTADOS_PEDIDO = (
         ('P', 'Procesado'),
     )
 
+class SolicitudPresupuesto(models.Model):
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroPresupuesto = models.IntegerField(verbose_name="Nro Presupuesto",blank=True, null=True)
+    proveedor = models.ForeignKey('Proveedor',on_delete=models.CASCADE,verbose_name="Proveedor")
+    fechaEntrega = models.DateField('Fecha Entrega',null=True,blank=True)
+    terminosCondiciones = models.CharField(max_length=500, verbose_name="Términos y Condiciones", null=True, blank=True)
+    plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
+    total = models.FloatField(default=0)
+    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name_plural = "Solicitudes de Presupuesto"
+
+    def __str__(self):
+        return str(self.nroPresupuesto)
+
+
+class SolicitudPresupuestoDetalle(models.Model):
+    solicitudPresupuesto = models.ForeignKey('SolicitudPresupuesto',on_delete=models.CASCADE)
+    articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE, verbose_name="Artículo")
+    descripcion = models.CharField(max_length=100, verbose_name="Descripción", null=True, blank=True)
+    cantidad = models.IntegerField()
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
+    precio = models.FloatField(default=0)
+    subtotal = models.FloatField(default=0)
+    
+
+
 class NotaPedido(models.Model):
     fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
     nroPedido = models.IntegerField(verbose_name="Nro Pedido",blank=True, null=True)
@@ -109,6 +138,19 @@ class Articulo(models.Model):
     def __str__(self):
         return self.codigo + " - " + self.descripcion
 
+class Proveedor(models.Model):
+    nombre = models.CharField(max_length=50)
+    ruc = models.CharField(max_length=20, verbose_name="RUC")
+    direccion = models.CharField(max_length=100, verbose_name="Dirección")
+    telefono = models.CharField(max_length=20, verbose_name="Teléfono")
+    email = models.EmailField(max_length=50, verbose_name="E-mail")
+    nombreContacto = models.CharField(max_length=50, verbose_name="Nombre Contacto")
+    telefonoContacto = models.CharField(max_length=50, verbose_name="Teléfono Contacto")
+    observaciones = models.CharField(max_length=200, blank=True, null=True)
+
+    def __str__(self):
+        return self.codigo + " - " + self.descripcion
+
 
 class DepartamentoSucursal(models.Model):
     departamento = models.ForeignKey('Departamento',on_delete=models.CASCADE)
@@ -136,6 +178,15 @@ class Sucursal(models.Model):
 
     class Meta:
         verbose_name_plural = "Sucursales"
+
+    def __str__(self):
+        return self.descripcion
+
+class PlazoPago(models.Model):
+    descripcion = models.CharField(max_length=50)
+
+    class Meta:
+        verbose_name_plural = "Plazos de Pago"
 
     def __str__(self):
         return self.descripcion
