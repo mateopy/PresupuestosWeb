@@ -9,7 +9,6 @@ from reportlab.lib.units import cm,inch
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter, A4
 from reportlab.platypus import Table
-
 from datetime import datetime
 from django.contrib.auth.models import User
 import os
@@ -49,11 +48,7 @@ def nota_pedido_report(request,id):
     elements.append(Spacer(1,0.2*inch))
     elements.append(Paragraph("Solicitamos nos provean de los siguientes: ",parrafoStyle))
     elements.append(Spacer(2,0.2*inch))
-
-
-
-
-
+    
     #DETALLE
     table = Table([headings] + results)
     table.setStyle(TableStyle(
