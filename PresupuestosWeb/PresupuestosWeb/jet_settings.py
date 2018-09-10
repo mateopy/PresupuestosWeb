@@ -1,3 +1,6 @@
+
+JET_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
+JET_APP_INDEX_DASHBOARD = 'dashboard.CustomAppIndexDashboard'
 JET_SIDE_MENU_COMPACT = False
 JET_SIDE_MENU_ITEMS = [
     {'label':'Operaciones','items':[
@@ -25,3 +28,4 @@ JET_SIDE_MENU_ITEMS = [
         ]
     },
 ]
+
