@@ -238,7 +238,7 @@ class NotaRemisionAdmin(Nota):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:notaremision_id>)/', self.admin_site.admin_view(self.procesar_remision), name='remision_enviar'),
-            path('imprimir/(<int:notaremision_id>)/', self.admin_site.admin_view(self.imprimir_remision), name='remision_imprimir'),]
+            path('imprimir/<int:notaremision_id>', self.admin_site.admin_view(self.imprimir_remision), name='remision_imprimir'),]
         return custom_urls + urls
 
     def accion_remision(self, obj):
@@ -267,9 +267,10 @@ class NotaRemisionAdmin(Nota):
     def imprimir_remision(self, request, notaremision_id, *args, **kwargs):
         remision = self.get_object(request, notaremision_id)
         if (remision and remision.estado != self.BORRADOR):
-            pass
-        url = reverse('admin:app_notaremision_changelist',current_app=request.resolver_match.namespace)
-        return HttpResponseRedirect(url)
+            return app.reports.nota_remision_report(request, notaremision_id)
+        else:
+            url = reverse('admin:app_notaremision_changelist',current_app=request.resolver_match.namespace)
+            return HttpResponseRedirect(url)
 
     def get_form(self, request, obj = None, **kwargs):
         form = super().get_form(request, obj, **kwargs) 
@@ -380,9 +381,10 @@ class RecepcionAdmin(Nota):
     def imprimir_recepcion(self, request, recepcion_id, *args, **kwargs):
         recepcion = self.get_object(request, recepcion_id)
         if (recepcion and recepcion.estado != self.BORRADOR):
-            pass
-        url = reverse('admin:app_recepcion_changelist',current_app=request.resolver_match.namespace)
-        return HttpResponseRedirect(url)
+            return app.reports.recepcion_report(request, recepcion_id)
+        else:
+            url = reverse('admin:app_recepcion_changelist',current_app=request.resolver_match.namespace)
+            return HttpResponseRedirect(url)
 
     def get_form(self, request, obj = None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
