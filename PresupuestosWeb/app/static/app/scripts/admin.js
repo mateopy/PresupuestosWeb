@@ -12,18 +12,28 @@ if (!$) {
 
 $(document).ready(function () {
     $(".field-cantidad input").change(function () {
-        actualizarTotal();
+        id = $(this).parent().parent().attr('id');
+        //console.log(id);
+        actualizarTotal(id);
     });
 
     $(".field-precio input").change(function () {
-        actualizarTotal();
+        id = $(this).parent().parent().attr('id');
+        //console.log(id);
+        actualizarTotal(id);
     });
 
-    function actualizarTotal() {
-        precio = $(".field-precio input").val();
-        cantidad = $(".field-cantidad input").val();
-        total = precio * cantidad;
-        $(".field-subtotal input").val(total);
+    function actualizarTotal(id) {
+        cantidadSelector = '#id_' + id + '-cantidad';
+        precioSelector = '#id_' + id + '-precio';
+        subtotalselector = '#id_' + id + '-subtotal';
+        
+        cantidad = $(cantidadSelector).val();
+        precio = $(precioSelector).val();
+
+        subtotal = precio * cantidad;
+
+        $(subtotalselector).val(subtotal);
     }
 });
 

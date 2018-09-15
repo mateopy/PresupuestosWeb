@@ -500,6 +500,9 @@ class FacturaCompraInLine(admin.TabularInline):
 class FacturaCompraAdmin(admin.ModelAdmin):
     inlines = (FacturaCompraInLine,)
 
+    class Media:
+        js = ("app/scripts/admin.js",)
+
 class UsuarioInLine(admin.TabularInline):
     model = Usuario
     can_delete = False
