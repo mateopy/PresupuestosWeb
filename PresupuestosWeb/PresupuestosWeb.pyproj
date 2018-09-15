@@ -78,6 +78,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="app\static\app\images\logo.png" />
+    <Content Include="app\static\app\scripts\admin.js">
+      <SubType>Code</SubType>
+    </Content>
     <Content Include="app\templates\app\admin\base_site.html" />
     <Content Include="app\templates\app\pedidos\nuevo.html" />
     <Content Include="app\templates\app\pedidos\pedidos.html" />
