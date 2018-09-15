@@ -17,27 +17,27 @@ class CustomIndexDashboard(Dashboard):
     columns = 3
 
     def init_with_context(self, context):
-        self.available_children = None
+        #self.available_children = None
         #self.available_children.append(modules.Feed)
-
+        self.available_children.append(modules.LinkList)
 
         # append an app list module for "Applications"
         self.children.append(modules.ModelList(
             _('Operaciones'),
-            models=('app.NotaPedido','app.NotaRemision','app.Recepcion'),
+            models=('app.NotaPedido','app.NotaRemision','app.Recepcion','app.SolicitudPresupuesto'),
             column=0,
             order=0
         ))
         self.children.append(modules.ModelList(
             _('Datos Generales'),
-            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal'),
+            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
             column=1,
             order=0
         ))
 
         self.children.append(modules.ModelList(
             _('Articulos'),
-            models=('app.Articulo','app.CategoriaArticulo','app.tipoarticulo','app.UnidadMedida'),
+            models=('app.Articulo','app.CategoriaArticulo','app.TipoArticulo','app.UnidadMedida'),
             column=2,
             order=0
         ))
@@ -66,20 +66,20 @@ class CustomAppIndexDashboard(AppIndexDashboard):
 
         self.children.append(modules.ModelList(
             _('Operaciones'),
-            models=('app.NotaPedido','app.NotaRemision','app.Recepcion'),
+            models=('app.NotaPedido','app.NotaRemision','app.Recepcion','app.SolicitudPresupuesto'),
             column=0,
             order=0
         ))
         self.children.append(modules.ModelList(
             _('Datos Generales'),
-            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal'),
+            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
             column=1,
             order=0
         ))
 
         self.children.append(modules.ModelList(
             _('Articulos'),
-            models=('app.Articulo','app.CategoriaArticulo','app.tipoarticulo','app.UnidadMedida'),
+            models=('app.Articulo','app.CategoriaArticulo','app.TipoArticulo','app.UnidadMedida'),
             column=2,
             order=0
         ))
