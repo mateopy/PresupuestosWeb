@@ -72,7 +72,7 @@ class Nota(admin.ModelAdmin):
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
     def get_form(self, request, obj = None, **kwargs):
-        form = super().get_form(request, obj, **kwargs) 
+        form = super().get_form(request, obj, **kwargs)
         if (form.base_fields):
             if not (form.base_fields['usuario'].initial):
                 form.base_fields['usuario'].initial = request.user
@@ -403,8 +403,81 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
-    inlines = (SolicitudPresupuestoInLine,)
+        
+    BORRADOR = 'B'
+    EN_PROCESO = 'E'
+    PROCESADO = 'P'
+    READ_ONLY = False
 
+    inlines = (SolicitudPresupuestoInLine,)
+    list_display = ('nroPresupuesto','fecha','proveedor','estado','accion_presupuesto')
+    fields = ('fecha','usuario','nroPresupuesto','pedido','proveedor','fechaEntrega','terminosCondiciones','plazoPago','moneda','total','estado')
+    exclude = ('tota',)
+    read_only_fields = ('fecha','estado',)
+    ordering = ['nroPresupuesto']
+    #list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
+
+    def get_form(self, request, obj = None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if (not obj and form.base_fields):
+            if not (form.base_fields['nroPresupuesto'].initial):
+                form.base_fields['nroPresupuesto'].initial = 0
+                form.base_fields['nroPresupuesto'].disabled = True
+            if not (form.base_fields['usuario'].initial):
+                form.base_fields['usuario'].initial = request.user
+                form.base_fields['usuario'].widget = HiddenInput()
+            form.base_fields['total'].widget = HiddenInput()
+            form.base_fields['estado'].widget = HiddenInput()
+        return form
+
+    def accion_presupuesto(self, obj):
+        return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
+            '<a class="button" href="{}">Imprimir</a>',
+            reverse('admin:presupuesto_confirmar', args=[obj.pk]),
+            reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
+    accion_presupuesto.short_description = 'Procesar'
+    accion_presupuesto.allow_tags = True
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        objecto = self.get_object(request, object_id)
+        self.READ_ONLY = False
+        if (objecto and objecto.estado != self.BORRADOR):
+            self.READ_ONLY = True
+            extra_context = extra_context or {}
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_delete'] = False
+            extra_context['show_save'] = False
+            extra_context['show_save_and_add_another'] = False
+            variables = []
+            for field in self.get_fields(request):
+                variables.append(field)
+            self.readonly_fields = tuple(variables)
+
+            for inline in self.inlines:
+                inline.readonly_fields = tuple(inline.get_fields(inline, request))
+                inline.can_delete = False
+                inline.max_num = 0
+        else:
+            self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
+            for inline in self.inlines:
+                inline.readonly_fields = []#inline.get_readonly_fields(inline, request)
+                inline.can_delete = True
+                inline.max_num = None
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+    def has_add_permission(self, request):
+        if self.READ_ONLY:
+            return False
+        return super().has_add_permission(request)
+
+    def changelist_view(self, request, extra_context = None):
+        self.READ_ONLY = False
+        self.readonly_fields = ('fecha',)
+        for inline in self.inlines:
+            inline.readonly_fields = []
+            inline.can_delete = True
+            inline.max_num = None
+        return super().changelist_view(request, extra_context)
 
 class OrdenCompraInLine(admin.TabularInline):
     model = OrdenCompraDetalle
