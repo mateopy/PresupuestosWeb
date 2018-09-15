@@ -400,12 +400,29 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     model = SolicitudPresupuestoDetalle
     can_delete = True
     verbore_name_plural = 'Artículos'
-    #fields = ('recepcion','articulo','cantidad','unidadMedida')
-    #extra = 2
+    
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
     inlines = (SolicitudPresupuestoInLine,)
 
+
+class OrdenCompraInLine(admin.TabularInline):
+    model = OrdenCompraDetalle
+    can_delete = True
+    verbore_name_plural = 'Artículos'
+    
+
+class OrdenCompraAdmin(admin.ModelAdmin):
+    inlines = (OrdenCompraInLine,)
+
+class FacturaCompraInLine(admin.TabularInline):
+    model = FacturaCompraDetalle
+    can_delete = True
+    verbore_name_plural = 'Artículos'
+    
+
+class FacturaCompraAdmin(admin.ModelAdmin):
+    inlines = (FacturaCompraInLine,)
 
 class UsuarioInLine(admin.TabularInline):
     model = Usuario
@@ -422,10 +439,15 @@ admin.site.register(NotaPedido,NotaPedidoAdmin)
 admin.site.register(NotaRemision,NotaRemisionAdmin)
 admin.site.register(Recepcion, RecepcionAdmin)
 admin.site.register(SolicitudPresupuesto, SolicitudPresupuestoAdmin)
+admin.site.register(OrdenCompra, OrdenCompraAdmin)
+admin.site.register(FacturaCompra, FacturaCompraAdmin)
 admin.site.register(Articulo)
+admin.site.register(Proveedor)
 admin.site.register(Departamento)
 admin.site.register(Sucursal)
 admin.site.register(DepartamentoSucursal)
 admin.site.register(TipoArticulo)
 admin.site.register(CategoriaArticulo)
 admin.site.register(UnidadMedida)
+admin.site.register(Moneda)
+admin.site.register(PlazoPago)

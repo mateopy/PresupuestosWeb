@@ -22,13 +22,75 @@ ESTADOS_PEDIDO = (
         ('P', 'Procesado'),
     )
 
-class SolicitudPresupuesto(models.Model):
+class FacturaCompra(models.Model):
     fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
-    nroPresupuesto = models.IntegerField(verbose_name="Nro Presupuesto",blank=True, null=True)
+    nroFacturaCompra = models.IntegerField(verbose_name="Nro Factura Compra",blank=True, null=True)
+    pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
+    ordenCompra = models.ForeignKey('OrdenCompra',on_delete=models.CASCADE, verbose_name="Nro Orden Compra")
+    proveedor = models.ForeignKey('Proveedor',on_delete=models.CASCADE,verbose_name="Proveedor")
+    plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
+    total = models.FloatField(default=0)
+    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name_plural = "Facturas de Compra"
+
+    def __str__(self):
+        return str(self.nroFacturaCompra)
+
+
+class FacturaCompraDetalle(models.Model):
+    facturaCompra = models.ForeignKey('FacturaCompra',on_delete=models.CASCADE)
+    articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE, verbose_name="Artículo")
+    descripcion = models.CharField(max_length=100, verbose_name="Descripción", null=True, blank=True)
+    cantidad = models.IntegerField()
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
+    precio = models.FloatField(default=0)
+    subtotal = models.FloatField(default=0)
+
+class OrdenCompra(models.Model):
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroOrdenCompra = models.IntegerField(verbose_name="Nro Orden de Compra",blank=True, null=True)
+    pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
     proveedor = models.ForeignKey('Proveedor',on_delete=models.CASCADE,verbose_name="Proveedor")
     fechaEntrega = models.DateField('Fecha Entrega',null=True,blank=True)
     terminosCondiciones = models.CharField(max_length=500, verbose_name="Términos y Condiciones", null=True, blank=True)
     plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
+    observaciones = models.CharField(max_length=200, verbose_name="Observaciones", null=True, blank=True)
+    total = models.FloatField(default=0)
+    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+    
+    class Meta:
+        verbose_name_plural = "Órdenes de Compra"
+
+    def __str__(self):
+        return str(self.nroNotaCompra)
+
+
+class OrdenCompraDetalle(models.Model):
+    notaCompra = models.ForeignKey('OrdenCompra',on_delete=models.CASCADE)
+    articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE, verbose_name="Artículo")
+    descripcion = models.CharField(max_length=100, verbose_name="Descripción", null=True, blank=True)
+    cantidad = models.IntegerField()
+    unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
+    precio = models.FloatField(default=0)
+    subtotal = models.FloatField(default=0)
+
+class SolicitudPresupuesto(models.Model):
+    fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    nroPresupuesto = models.IntegerField(verbose_name="Nro Presupuesto",blank=True, null=True)
+    pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
+    proveedor = models.ForeignKey('Proveedor',on_delete=models.CASCADE,verbose_name="Proveedor")
+    fechaEntrega = models.DateField('Fecha Entrega',null=True,blank=True)
+    terminosCondiciones = models.CharField(max_length=500, verbose_name="Términos y Condiciones", null=True, blank=True)
+    plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
     total = models.FloatField(default=0)
     estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -46,6 +108,7 @@ class SolicitudPresupuestoDetalle(models.Model):
     descripcion = models.CharField(max_length=100, verbose_name="Descripción", null=True, blank=True)
     cantidad = models.IntegerField()
     unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
+    moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
     precio = models.FloatField(default=0)
     subtotal = models.FloatField(default=0)
     
@@ -151,6 +214,9 @@ class Proveedor(models.Model):
     def __str__(self):
         return self.codigo + " - " + self.descripcion
 
+    class Meta:
+        verbose_name_plural = "Proveedores"
+
 
 class DepartamentoSucursal(models.Model):
     departamento = models.ForeignKey('Departamento',on_delete=models.CASCADE)
@@ -170,7 +236,16 @@ class Departamento(models.Model):
 
     def __str__(self):
         return self.descripcion
-    
+
+class Moneda(models.Model):
+    descripcion = models.CharField(max_length=50)
+    codigo = models.CharField(max_length=5)
+
+    class Meta:
+        verbose_name_plural = "Monedas"
+
+    def __str__(self):
+        return self.descripcion
 
 class Sucursal(models.Model):
     descripcion = models.CharField(max_length=50)
