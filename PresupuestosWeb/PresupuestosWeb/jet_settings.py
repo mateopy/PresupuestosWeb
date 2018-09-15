@@ -1,4 +1,4 @@
-
+JET_DEFAULT_THEME = 'green'
 JET_INDEX_DASHBOARD = 'dashboard.CustomIndexDashboard'
 JET_APP_INDEX_DASHBOARD = 'dashboard.CustomAppIndexDashboard'
 JET_SIDE_MENU_COMPACT = False
@@ -23,7 +23,7 @@ JET_SIDE_MENU_ITEMS = [
             {'name':'app.unidadmedida'},
         ]
     },
-    {'label':'Datos Generales','items':[
+    {'label':'Datos Maestros','items':[
             {'name':'app.sucursal'},
             {'name':'app.departamento'},
             {'name':'app.departamentosucursal'},

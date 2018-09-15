@@ -13,8 +13,9 @@ from jet.dashboard.dashboard import Dashboard, AppIndexDashboard
 #            order = 0
 #            ))
 
+
 class CustomIndexDashboard(Dashboard):
-    columns = 3
+    columns = 4
 
     def init_with_context(self, context):
         #self.available_children = None
@@ -23,22 +24,27 @@ class CustomIndexDashboard(Dashboard):
 
         # append an app list module for "Applications"
         self.children.append(modules.ModelList(
-            _('Operaciones'),
+            _('Pedidos'),
             models=('app.NotaPedido','app.NotaRemision','app.Recepcion','app.SolicitudPresupuesto'),
             column=0,
             order=0
         ))
         self.children.append(modules.ModelList(
-            _('Datos Generales'),
-            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
-            column=1,
+            _('Compras'),
+            models=('app.SolicitudPresupuesto','app.OrdenCompra','app.FacturaCompra','app.Proveedor'),
+            column=3,
             order=0
         ))
-
         self.children.append(modules.ModelList(
             _('Articulos'),
             models=('app.Articulo','app.CategoriaArticulo','app.TipoArticulo','app.UnidadMedida'),
             column=2,
+            order=0
+        ))
+        self.children.append(modules.ModelList(
+            _('Datos Maestros'),
+            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
+            column=1,
             order=0
         ))
 
@@ -60,29 +66,36 @@ class CustomIndexDashboard(Dashboard):
 
 
 class CustomAppIndexDashboard(AppIndexDashboard):
-    columns = 3
+    columns = 4
     def init_with_context(self, context):
         self.available_children.append(modules.LinkList)
 
         self.children.append(modules.ModelList(
-            _('Operaciones'),
+            _('Pedidos'),
             models=('app.NotaPedido','app.NotaRemision','app.Recepcion','app.SolicitudPresupuesto'),
             column=0,
             order=0
         ))
         self.children.append(modules.ModelList(
-            _('Datos Generales'),
-            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
-            column=1,
+            _('Compras'),
+            models=('app.SolicitudPresupuesto','app.OrdenCompra','app.FacturaCompra','app.Proveedor'),
+            column=3,
             order=0
         ))
-
         self.children.append(modules.ModelList(
             _('Articulos'),
             models=('app.Articulo','app.CategoriaArticulo','app.TipoArticulo','app.UnidadMedida'),
             column=2,
             order=0
         ))
+        self.children.append(modules.ModelList(
+            _('Datos Maestros'),
+            models=('app.Sucursal','app.Departamento','app.DepartamentoSucursal','app.Proveedor','app.PlazoPago'),
+            column=1,
+            order=0
+        ))
+
+        
 
         # append an app list module for "Administration"
         #self.children.append(modules.ModelList(
