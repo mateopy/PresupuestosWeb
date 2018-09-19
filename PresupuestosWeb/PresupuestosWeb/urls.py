@@ -23,7 +23,8 @@ urlpatterns = [
     url(r'^pedidos/eliminar/(?P<id>\S+)$', app.views.pedidos_eliminar, name='pedidos_eliminar'),
 
     # Examples:
-    url(r'^$', app.views.home, name='home'),
+    #url(r'^$', app.views.home, name='home'),
+    
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
     url(r'^administracion/app/notapedido/imprimir/(?P<id>\S+)$', app.views.reporte_nota_pedido, name='reporte_nota_pedido'),
@@ -53,4 +54,5 @@ urlpatterns = [
     url(r'^jet/', include('jet.urls', 'jet')),
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     url(r'^administracion/', admin.site.urls),
+    url(r'^$', admin.site.urls),
 ]
