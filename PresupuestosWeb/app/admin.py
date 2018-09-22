@@ -519,6 +519,9 @@ class OrdenCompraInLine(admin.TabularInline):
 class OrdenCompraAdmin(admin.ModelAdmin):
     inlines = (OrdenCompraInLine,)
 
+    class Media:
+        js = ("app/scripts/admin.js",)
+
 class FacturaCompraInLine(admin.TabularInline):
     model = FacturaCompraDetalle
     can_delete = True
@@ -527,6 +530,9 @@ class FacturaCompraInLine(admin.TabularInline):
 
 class FacturaCompraAdmin(admin.ModelAdmin):
     inlines = (FacturaCompraInLine,)
+
+    class Media:
+        js = ("app/scripts/admin.js",)
 
 class UsuarioInLine(admin.TabularInline):
     model = Usuario

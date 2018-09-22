@@ -224,9 +224,10 @@ class DepartamentoSucursal(models.Model):
 
     class Meta:
         verbose_name_plural = "Departamentos por Sucursal"
-       
+      
     def __str__(self):
         return (str((self.departamento.descripcion)) + " - " + self.sucursal.descripcion)
+    
 
 class Departamento(models.Model):
     descripcion = models.CharField(max_length=50)
