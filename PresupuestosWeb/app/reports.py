@@ -36,8 +36,11 @@ def nota_pedido_report(request,id):
     titulo1 = c.drawString(220,790,'NOTA DE PEDIDO')
     c.drawString(250, 770,'Nº')
     nro = c.drawString(270, 770, str(id))
+    print(settings.STATIC_ROOT)
+    archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
+    #imagen = Image(archivo_imagen, width=50, height=50,hAlign='LEFT')
     c.drawString(400, 780,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 770, width=70, height=45)
+    c.drawImage(archivo_imagen, 80, 770, width=70, height=45)
 
     #Table Header
     styles = getSampleStyleSheet()
@@ -99,7 +102,7 @@ def nota_pedido_report(request,id):
     c.drawString(250, 360,'Nº')
     nro = c.drawString(270, 360, str(id))
     c.drawString(400, 380,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 360, width=70, height=45)
+    c.drawImage(archivo_imagen, 80, 360, width=70, height=45)
     c.drawString(80, 340,  "Para: ")
     c.drawString(80, 320, "De: " )
     c.setFont("Times-Roman", 12)
@@ -222,7 +225,7 @@ def nota_remision_report(request, id):
     #Header
     c.setTitle("Nota Remision")
     c.setLineWidth(.3)
-    c.setFont("Times-Roman", 12)
+    c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220,790,'NOTA DE REMISIÓN')
     c.drawString(250, 770,'Nº')
     nro = c.drawString(270, 770, str(id))
@@ -239,11 +242,17 @@ def nota_remision_report(request, id):
     parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 12,fontName="Times-Roman")
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
     results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
+
+
     
-   
-    c.drawString(80, 740, "Para: " + str(master.departamentoDestino))
-    c.drawString(80, 720, "De: " + str(master.departamentoOrigen))
-    c.drawString(80, 700, "Ref.: " + str(master.pedido))
+    c.setFont("Times-Bold", 12)
+    c.drawString(80, 740, "Para: ")
+    c.drawString(80, 720, "De: ")
+    c.drawString(80, 700, "Ref.: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(110, 740, str(master.departamentoDestino))
+    c.drawString(110, 720, str(master.departamentoOrigen))
+    c.drawString(110, 700, str(master.pedido))
     c.drawString(80, 680, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
 
     elements.append(headings)
@@ -264,30 +273,27 @@ def nota_remision_report(request, id):
     table.wrapOn(c, 600, 500)
     table.drawOn(c, 80, 600)
 
-    #c.line(0,0,1*inch,0)
-    c.drawString(80, 410, "-----------------------")
-    c.drawString(270, 410, "-----------------------")
-    c.drawString(405, 410, "-----------------------")
-    styleE = styles["Normal"]
-    styleE.alignment = TA_CENTER
-    styleE.fontSize = 8
-    c.drawString(85, 400, str(master.departamentoOrigen))
-    c.drawString(285, 400, "Jefe de Est.")
-    c.drawString(410, 400, "Gerente de Área")
+    c.line(80, 440, 220, 440)
+    c.setFont("Times-Roman", 8)
+    c.drawString(85, 430, str(master.departamentoOrigen))
 
     #Header2
     #c.setLineWidth(.3)
-    #c.setFont("Times-Roman", 12)
-    titulo1 = c.drawString(220,360,'NOTA DE REMISIÓN')
-    c.drawString(250, 340,'Nº')
-    nro = c.drawString(270, 340, str(id))
-    c.drawString(400, 360,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 340, width=70, height=45)
+    c.setFont("Times-Bold", 12)
+    titulo1 = c.drawString(220, 390,'NOTA DE REMISIÓN')
+    c.drawString(250, 375,'Nº')
+    nro = c.drawString(270, 375, str(id))
+    c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
+    c.drawImage("static/app/images/logo.png", 80, 370, width=70, height=45)
 
-    c.drawString(80, 320, "Para: " + str(master.departamentoDestino))
-    c.drawString(80, 300, "De: " + str(master.departamentoOrigen))
-    c.drawString(80, 280, "Ref.: " + str(master.pedido))
-    c.drawString(80, 260, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
+    c.drawString(80, 350, "Para: ")
+    c.drawString(80, 330, "De: ")
+    c.drawString(80, 310, "Ref.: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(110, 350, str(master.departamentoDestino))
+    c.drawString(110, 330, str(master.departamentoOrigen))
+    c.drawString(110, 310, str(master.pedido))
+    c.drawString(80, 290, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
 
     #Detalle Tabla 2
     table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
@@ -301,16 +307,14 @@ def nota_remision_report(request, id):
                     ))
 
     elements.append(table)
-    table.wrapOn(c, 250, 150)
-    table.drawOn(c, 80, 175)
+    table.wrapOn(c, 250, 200)
+    table.drawOn(c, 80, 210)
 
-    c.drawString(80, 45, "-----------------------")
-    c.drawString(230, 45, "-----------------------")
-    c.drawString(380, 45, "-----------------------")
-    c.drawString(85, 30, str(master.departamentoOrigen))
-    c.drawString(245, 30, "Jefe de Est.")
-    c.drawString(385, 30, "Gerente de Área")
-    
+    c.line(80, 35, 220, 35)
+    c.setFont("Times-Roman", 8)
+    c.drawString(85, 25, str(master.departamentoOrigen))
+
+
     c.save()
     pdf = buffer.getvalue()
     buffer.close()
@@ -384,13 +388,13 @@ def recepcion_report(request, id):
     c = canvas.Canvas(buffer, pagesize=A4)
 
     #Header
-    c.setTitle("Recepcion")
+    c.setTitle("Nota Recepcion")
     c.setLineWidth(.3)
-    c.setFont("Times-Roman", 12)
-    titulo1 = c.drawString(220,790,'NOTA DE RECEPCIÓN')
-    c.drawString(250, 770,'Nº')
+    c.setFont("Times-Bold", 12)
+    c.drawString(200,790, 'NOTA DE RECEPCIÓN')
+    c.drawString(250, 770, 'Nº')
     nro = c.drawString(270, 770, str(id))
-    c.drawString(400, 790,  master.fecha.strftime('%d-%m-%Y'))
+    c.drawString(400, 790, master.fecha.strftime('%d-%m-%Y'))
     c.drawImage("static/app/images/logo.png", 80, 760, width=70, height=45)
 
     #Table Header
@@ -404,12 +408,13 @@ def recepcion_report(request, id):
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
     results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
     
-   
-    c.drawString(80, 740, "Para: " + str(master.departamentoDestino))
-    c.drawString(80, 720, "De: " + str(master.departamentoOrigen))
-    #c.drawString(80, 700, "Ref.: " + str(master.pedido))
-    #c.drawString(80, 680, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
-
+    c.setFont("Times-Bold", 12)
+    c.drawString(80, 740, "Para: ")
+    c.drawString(80, 720, "De: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(110, 740, str(master.departamentoDestino))
+    c.drawString(110, 720, str(master.departamentoOrigen))
+    
     elements.append(headings)
     elements.append(results)
 
@@ -428,30 +433,25 @@ def recepcion_report(request, id):
     table.wrapOn(c, 600, 500)
     table.drawOn(c, 80, 620)
 
-    #c.line(0,0,1*inch,0)
-    c.drawString(80, 410, "-----------------------")
-    c.drawString(270, 410, "-----------------------")
-    c.drawString(405, 410, "-----------------------")
-    styleE = styles["Normal"]
-    styleE.alignment = TA_CENTER
-    styleE.fontSize = 8
-    c.drawString(85, 400, str(master.departamentoOrigen))
-    c.drawString(285, 400, "Jefe de Est.")
-    c.drawString(410, 400, "Gerente de Área")
+    c.setFont("Times-Roman", 8)
+    c.line(80, 450, 210, 450)
+    c.drawString(85, 440, str(master.departamentoOrigen))
 
     #Header2
     #c.setLineWidth(.3)
-    #c.setFont("Times-Roman", 12)
-    titulo1 = c.drawString(220,360,'NOTA DE RECEPCIÓN')
-    c.drawString(250, 340,'Nº')
-    nro = c.drawString(270, 340, str(id))
-    c.drawString(400, 360,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 340, width=70, height=45)
+    c.setFont("Times-Bold", 12)
+    c.drawString(200, 390,'NOTA DE RECEPCIÓN')
+    c.drawString(250, 375,'Nº')
+    nro = c.drawString(270, 375, str(id))
+    c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
+    c.drawImage("static/app/images/logo.png", 80, 370, width=70, height=45)
 
-    c.drawString(80, 320, "Para: " + str(master.departamentoDestino))
-    c.drawString(80, 300, "De: " + str(master.departamentoOrigen))
-    #c.drawString(80, 280, "Ref.: " + str(master.pedido))
-    #c.drawString(80, 260, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
+    c.drawString(80, 350, "Para: ")
+    c.drawString(80, 330, "De: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(80, 310, str(master.departamentoDestino))
+    c.drawString(80, 290, str(master.departamentoOrigen))
+
 
     #Detalle Tabla 2
     table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
@@ -468,13 +468,9 @@ def recepcion_report(request, id):
     table.wrapOn(c, 250, 150)
     table.drawOn(c, 80, 200)
 
-    c.drawString(80, 45, "-----------------------")
-    c.drawString(230, 45, "-----------------------")
-    c.drawString(380, 45, "-----------------------")
+    c.line(80, 45, 210, 45)
     c.drawString(85, 30, str(master.departamentoOrigen))
-    c.drawString(245, 30, "Jefe de Est.")
-    c.drawString(385, 30, "Gerente de Área")
-    
+
     c.save()
     pdf = buffer.getvalue()
     buffer.close()

@@ -51,4 +51,5 @@ urlpatterns = [
     url(r'^jet/dashboard/', include('jet.dashboard.urls', 'jet-dashboard')),
     url(r'^administracion/', admin.site.urls),
     url(r'^$', admin.site.urls),
+    url(r'^app/', include('app.urls')),
 ]
