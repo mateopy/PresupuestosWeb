@@ -32,7 +32,7 @@ def nota_pedido_report(request,id):
     #Header
     c.setTitle("Nota Pedido")
     c.setLineWidth(.3)
-    c.setFont("Times-Roman", 12)
+    c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220,790,'NOTA DE PEDIDO')
     c.drawString(250, 770,'Nº')
     nro = c.drawString(270, 770, str(id))
@@ -43,16 +43,19 @@ def nota_pedido_report(request,id):
     styles = getSampleStyleSheet()
     styleBH = styles["Normal"]
     styleBH.alignment = TA_CENTER
-    styleBH.fontSize = 8
+    styleBH.fontSize = 12
     
     
     parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 12,fontName="Times-Roman")
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
     results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
     
-   
-    c.drawString(80, 740, "Para: " + str(master.departamentoDestino))
-    c.drawString(80, 720, "De: " + str(master.departamentoOrigen))
+    c.setFont("Times-Bold", 12)
+    c.drawString(80, 740, "Para: ")
+    c.drawString(80, 720, "De: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(110, 740, str(master.departamentoDestino))
+    c.drawString(110, 720, str(master.departamentoOrigen))
     c.drawString(80, 700, "Solicitamos nos provean de los siguientes: ")
 
     elements.append(headings)
@@ -73,11 +76,12 @@ def nota_pedido_report(request,id):
     table.wrapOn(c, 600, 500)
     table.drawOn(c, 80, 630)
 
-
-    c.drawString(80, 480, "Para uso en: " + to_str(master.descripcionUso))
-    c.drawString(80, 460, "Precio aproximado: " + to_str(master.precioAproximado))
-    #elements.append(Paragraph(c.drawString(80, 55, "Precio aproximado: " + to_str(master.precioAproximado)) ,parrafoStyle))
-    #c.drawString(80, 430, <font name="Times-Roman" size="14">This is in Times-Roman</font> + to_str(master.precioAproximado))
+    c.setFont("Times-Bold", 12)
+    c.drawString(80, 480, "Para uso en: ")
+    c.drawString(80, 460, "Precio aproximado: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(190, 480, to_str(master.descripcionUso))
+    c.drawString(190, 460, to_str(master.precioAproximado))
 
     c.line(80, 435, 220, 435)
     c.line(270, 435, 350, 435)
@@ -98,8 +102,9 @@ def nota_pedido_report(request,id):
     c.drawImage("static/app/images/logo.png", 80, 360, width=70, height=45)
     c.drawString(80, 340,  "Para: ")
     c.drawString(80, 320, "De: " )
-    c.drawString(90, 340, str(master.departamentoDestino))
-    c.drawString(90, 320, str(master.departamentoOrigen))
+    c.setFont("Times-Roman", 12)
+    c.drawString(110, 340, str(master.departamentoDestino))
+    c.drawString(110, 320, str(master.departamentoOrigen))
     c.drawString(80, 300, "Solicitamos nos provean de los siguientes: ")
 
     #Detalle Tabla 2
@@ -116,16 +121,19 @@ def nota_pedido_report(request,id):
     elements.append(table)
     table.wrapOn(c, 250, 150)
     table.drawOn(c, 80, 230)
-
-    c.drawString(80, 90, "Para uso en: " + to_str(master.descripcionUso))
-    c.drawString(80, 70, "Precio aproximado: " + to_str(master.precioAproximado))
+    c.setFont("Times-Bold", 12)
+    c.drawString(80, 90, "Para uso en: ")
+    c.drawString(80, 70, "Precio aproximado: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(190, 90, to_str(master.descripcionUso))
+    c.drawString(190, 70, to_str(master.precioAproximado))
     #elements.append(Paragraph(c.drawString(80, 55, "Precio aproximado: " + to_str(master.precioAproximado)) ,parrafoStyle))
 
     c.line(80, 45, 220, 45)
     c.line(270, 45, 350, 45)
     c.line(410, 45, 500, 45)
     
-   
+    c.setFont("Times-Roman", 8)
     c.drawString(85, 30, "Vo.Bo. Gte. Administrativo")
     c.drawString(280, 30, "Jefe de Est.")
     c.drawString(415, 30, "Gerente de Área")
