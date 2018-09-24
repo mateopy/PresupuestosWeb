@@ -11,15 +11,17 @@ if (!$) {
 }
 
 $(document).ready(function () {
+    $('.field-subtotal input').prop('readonly', true);
+
     $(".field-cantidad input").change(function () {
         id = $(this).parent().parent().attr('id');
-        //console.log(id);
+        console.log(id);
         actualizarTotal(id);
     });
 
     $(".field-precio input").change(function () {
         id = $(this).parent().parent().attr('id');
-        //console.log(id);
+        console.log(id);
         actualizarTotal(id);
     });
 
@@ -32,6 +34,8 @@ $(document).ready(function () {
         precio = $(precioSelector).val();
 
         subtotal = precio * cantidad;
+        console.log(cantidad, precio, subtotal);
+        console.log(subtotalselector);
 
         $(subtotalselector).val(subtotal);
     }

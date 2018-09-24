@@ -403,7 +403,7 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     can_delete = True
     verbore_name_plural = 'Artículos'
     fields = ('solicitudPresupuesto','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
-    readonly_fields = ('subtotal',)
+    #readonly_fields = ('subtotal',)
     
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
@@ -419,6 +419,9 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
     read_only_fields = ('fecha','estado',)
     ordering = ['nroPresupuesto']
     #list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
+
+    class Media:
+        js = ("app/scripts/admin.js",)
 
     def get_form(self, request, obj = None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
@@ -493,7 +496,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         else:
             self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
             for inline in self.inlines:
-                inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
+                #inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
                 inline.can_delete = True
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
