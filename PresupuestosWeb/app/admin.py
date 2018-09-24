@@ -244,7 +244,7 @@ class NotaRemisionAdmin(Nota):
 
     def accion_remision(self, obj):
         return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:remision_enviar', args=[obj.pk]),
             reverse('admin:remision_imprimir', args=[obj.pk]),)
     accion_remision.short_description = 'Procesar'
@@ -353,13 +353,13 @@ class RecepcionAdmin(Nota):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:recepcion_id>)/', self.admin_site.admin_view(self.confirmar_recepcion), name='recepcion_confirmar'),
-            path('imprimir/(<int:recepcion_id>)/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
+            path('imprimir/<int:recepcion_id>/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
             #path('imprimir/<int:recepcion_id>', app.reports.recepcion_report, name='recepcion_imprimir'),]
         return custom_urls + urls
 
     def accion_recepcion(self, obj):
         return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" href="{}" target="_blank">Imprimir</a>',
             reverse('admin:recepcion_confirmar', args=[obj.pk]),
             reverse('admin:recepcion_imprimir', args=[obj.pk]),)
     accion_recepcion.short_description = 'Procesar'
@@ -442,7 +442,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
 
     def accion_presupuesto(self, obj):
         return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" href="{}" target="_blank">Imprimir</a>',
             reverse('admin:presupuesto_confirmar', args=[obj.pk]),
             reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
     accion_presupuesto.short_description = 'Procesar'
