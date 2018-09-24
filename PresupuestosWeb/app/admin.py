@@ -402,6 +402,8 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     model = SolicitudPresupuestoDetalle
     can_delete = True
     verbore_name_plural = 'Artículos'
+    fields = ('solicitudPresupuesto','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
+    readonly_fields = ('subtotal',)
     
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
@@ -412,9 +414,8 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
     READ_ONLY = False
 
     inlines = (SolicitudPresupuestoInLine,)
-    list_display = ('nroPresupuesto','fecha','proveedor','estado','accion_presupuesto')
+    list_display = ('nroPresupuesto','fecha','fechaEntrega','proveedor','estado','accion_presupuesto')
     fields = ('fecha','usuario','nroPresupuesto','pedido','proveedor','fechaEntrega','terminosCondiciones','plazoPago','moneda','total','estado')
-    exclude = ('tota',)
     read_only_fields = ('fecha','estado',)
     ordering = ['nroPresupuesto']
     #list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
@@ -427,10 +428,17 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
                 form.base_fields['nroPresupuesto'].disabled = True
             if not (form.base_fields['usuario'].initial):
                 form.base_fields['usuario'].initial = request.user
-                form.base_fields['usuario'].widget = HiddenInput()
-            form.base_fields['total'].widget = HiddenInput()
-            form.base_fields['estado'].widget = HiddenInput()
+        form.base_fields['usuario'].widget = HiddenInput()
+        form.base_fields['total'].widget = HiddenInput()
+        form.base_fields['estado'].widget = HiddenInput()
         return form
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [#url(r'^$', app.views.home, name='home')
+            path('procesar/(<int:solicitudpresupuesto_id>)/', self.admin_site.admin_view(self.confirmar_presupuesto), name='presupuesto_confirmar'),
+            path('imprimir/(<int:solicitudpresupuesto_id>)/', self.admin_site.admin_view(self.imprimir_presupuesto), name='presupuesto_imprimir'),]
+        return custom_urls + urls
 
     def accion_presupuesto(self, obj):
         return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
@@ -439,6 +447,29 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
             reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
     accion_presupuesto.short_description = 'Procesar'
     accion_presupuesto.allow_tags = True
+
+    def confirmar_presupuesto(self, request, presupuesto_id, *args, **kwargs):
+        #recepcion = self.get_object(request, recepcion_id)
+        #if (recepcion):
+        #    if (recepcion.estado == self.BORRADOR):
+        #        recepcion.estado = self.PROCESADO
+        #        lastObject = self.get_max_object(request, Recepcion, 'nroRecepcion')
+        #        recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+        #        recepcion.fecha = timezone.localtime(timezone.now())
+        #        recepcion.save()
+        #    else:
+        #        self.message_user(request, "Recepcion Ya Procesada")
+        url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    #metodo para imprimir el pedido
+    def imprimir_presupuesto(self, request, presupuesto_id, *args, **kwargs):
+        #recepcion = self.get_object(request, recepcion_id)
+        #if (recepcion and recepcion.estado != self.BORRADOR):
+        #    return app.reports.recepcion_report(request, recepcion_id)
+        #else:
+        url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         objecto = self.get_object(request, object_id)
@@ -462,7 +493,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         else:
             self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
             for inline in self.inlines:
-                inline.readonly_fields = []#inline.get_readonly_fields(inline, request)
+                inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
                 inline.can_delete = True
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
