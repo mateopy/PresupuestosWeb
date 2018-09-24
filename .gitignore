@@ -278,3 +278,4 @@ __pycache__/
 /PresupuestosWeb/app/static/app/app/app/range_filter/css
 /PresupuestosWeb/app/static/app/app/app/app
 /PresupuestosWeb/static
+/PresupuestosWeb/app/migrations/0019_auto_20180924_1336.py

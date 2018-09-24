@@ -244,7 +244,7 @@ class NotaRemisionAdmin(Nota):
 
     def accion_remision(self, obj):
         return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:remision_enviar', args=[obj.pk]),
             reverse('admin:remision_imprimir', args=[obj.pk]),)
     accion_remision.short_description = 'Procesar'
@@ -353,13 +353,13 @@ class RecepcionAdmin(Nota):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:recepcion_id>)/', self.admin_site.admin_view(self.confirmar_recepcion), name='recepcion_confirmar'),
-            path('imprimir/(<int:recepcion_id>)/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
+            path('imprimir/<int:recepcion_id>/', self.admin_site.admin_view(self.imprimir_recepcion), name='recepcion_imprimir'),]
             #path('imprimir/<int:recepcion_id>', app.reports.recepcion_report, name='recepcion_imprimir'),]
         return custom_urls + urls
 
     def accion_recepcion(self, obj):
         return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+            '<a class="button" href="{}" target="_blank">Imprimir</a>',
             reverse('admin:recepcion_confirmar', args=[obj.pk]),
             reverse('admin:recepcion_imprimir', args=[obj.pk]),)
     accion_recepcion.short_description = 'Procesar'
@@ -403,7 +403,7 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     can_delete = True
     verbore_name_plural = 'Artículos'
     fields = ('solicitudPresupuesto','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
-    readonly_fields = ('subtotal',)
+    #readonly_fields = ('subtotal',)
     
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
@@ -420,6 +420,20 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
     ordering = ['nroPresupuesto']
     #list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
 
+    class Media:
+        js = ("app/scripts/admin.js",)
+
+    def save_formset(self, request, form, formset, change):
+        inlines = formset.save(commit=False)
+        for inline in inlines:
+            inline.moneda = self.objeto.moneda
+            inline.save()
+
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        self.objeto = obj
+
+
     def get_form(self, request, obj = None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if (not obj and form.base_fields):
@@ -428,39 +442,51 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
                 form.base_fields['nroPresupuesto'].disabled = True
             if not (form.base_fields['usuario'].initial):
                 form.base_fields['usuario'].initial = request.user
-        form.base_fields['usuario'].widget = HiddenInput()
-        form.base_fields['total'].widget = HiddenInput()
-        form.base_fields['estado'].widget = HiddenInput()
+            form.base_fields['usuario'].widget = HiddenInput()
+            form.base_fields['total'].widget = HiddenInput()
+            form.base_fields['estado'].widget = HiddenInput()
         return form
 
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
-            path('procesar/(<int:solicitudpresupuesto_id>)/', self.admin_site.admin_view(self.confirmar_presupuesto), name='presupuesto_confirmar'),
-            path('imprimir/(<int:solicitudpresupuesto_id>)/', self.admin_site.admin_view(self.imprimir_presupuesto), name='presupuesto_imprimir'),]
+            path('procesar/(<int:presupuesto_id>)/', self.admin_site.admin_view(self.confirmar_presupuesto), name='presupuesto_confirmar'),
+            path('imprimir/(<int:presupuesto_id>)/', self.admin_site.admin_view(self.imprimir_presupuesto), name='presupuesto_imprimir'),]
         return custom_urls + urls
 
     def accion_presupuesto(self, obj):
-        return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
-            '<a class="button" href="{}">Imprimir</a>',
+        a =  format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
+            '<a class="button" href="{}" target="_blank">Imprimir</a>',
             reverse('admin:presupuesto_confirmar', args=[obj.pk]),
             reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
+        print (a)
+        return a
     accion_presupuesto.short_description = 'Procesar'
     accion_presupuesto.allow_tags = True
 
     def confirmar_presupuesto(self, request, presupuesto_id, *args, **kwargs):
-        #recepcion = self.get_object(request, recepcion_id)
-        #if (recepcion):
-        #    if (recepcion.estado == self.BORRADOR):
-        #        recepcion.estado = self.PROCESADO
-        #        lastObject = self.get_max_object(request, Recepcion, 'nroRecepcion')
-        #        recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
-        #        recepcion.fecha = timezone.localtime(timezone.now())
-        #        recepcion.save()
-        #    else:
-        #        self.message_user(request, "Recepcion Ya Procesada")
+      
+        presupuesto = self.get_object(request, presupuesto_id)
+        if (presupuesto):
+            if (presupuesto.estado == self.BORRADOR):
+                presupuesto.estado = self.PROCESADO
+                lastObject = self.get_max_object(request, SolicitudPresupuesto , 'nroPresupuesto')
+                presupuesto.nroPresupuesto = int(lastObject.nroPresupuesto+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                presupuesto.fecha = timezone.localtime(timezone.now())
+                presupuesto.save()
+            else:
+                self.message_user(request, "Recepcion Ya Procesada")
         url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
         return HttpResponseRedirect(url)
+
+    def get_max_object(self, request, modelo, campo):
+        #qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
+        try:
+            lastObjeto = modelo.objects.filter().latest(campo)
+        except:
+            lastObjeto = None
+
+        return lastObjeto
 
     #metodo para imprimir el pedido
     def imprimir_presupuesto(self, request, presupuesto_id, *args, **kwargs):
@@ -493,7 +519,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         else:
             self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
             for inline in self.inlines:
-                inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
+                #inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
                 inline.can_delete = True
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
