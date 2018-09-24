@@ -9,6 +9,7 @@ from django.http import HttpRequest
 from django.template import RequestContext
 from app.functions import *
 from app.reports import *
+from django.http import JsonResponse
 
 
 def reporte_nota_pedido(request,id):
@@ -139,3 +140,15 @@ def about(request):
             'year':datetime.now().year,
         }
     )
+
+#@login_required
+def get_articulo(request):
+    id = request.GET.get('id_articulo',None)
+    data = {}
+    if id:
+        articulo = Articulo.objects.get(pk=id)
+        if articulo:
+            data.update({
+                'descripcion':articulo.descripcion
+                })
+    return JsonResponse(data)

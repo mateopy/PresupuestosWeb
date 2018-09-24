@@ -25,6 +25,21 @@ $(document).ready(function () {
         actualizarTotal(id);
     });
 
+    $(".field-articulo select").change(function () {
+
+        const pk = $(this).val();
+        const articulo_id = this.id.replace("-articulo", "-descripcion");
+
+        //console.log(id);
+        $.get("/app/get_articulo?id_articulo=" + pk, function (data) {
+
+            if (data.descripcion) {
+                $("#" + articulo_id).val(data.descripcion);
+            }
+
+        });
+    });
+
     function actualizarTotal(id) {
         cantidadSelector = '#id_' + id + '-cantidad';
         precioSelector = '#id_' + id + '-precio';
