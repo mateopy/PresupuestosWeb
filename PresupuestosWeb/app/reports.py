@@ -547,7 +547,7 @@ def getDoc(buff, title):
 def tabla_encabezado(styles,texto,numero):
         sp = ParagraphStyle('parrafos',alignment = TA_CENTER,fontSize = 16, fontName="Times-Roman")
         try:
-            print(settings.STATIC_ROOT)
+            #print(settings.STATIC_ROOT)
             archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
             imagen = Image(archivo_imagen, width=50, height=50,hAlign='LEFT')
         except:
