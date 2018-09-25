@@ -230,7 +230,9 @@ def nota_remision_report(request, id):
     c.drawString(250, 770,'Nº')
     nro = c.drawString(270, 770, str(id))
     c.drawString(400, 790,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 760, width=70, height=45)
+    print(settings.STATIC_ROOT)
+    archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
+    c.drawImage(archivo_imagen, 80, 760, width=70, height=45)
 
     #Table Header
     styles = getSampleStyleSheet()
@@ -284,7 +286,7 @@ def nota_remision_report(request, id):
     c.drawString(250, 375,'Nº')
     nro = c.drawString(270, 375, str(id))
     c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 370, width=70, height=45)
+    c.drawImage(archivo_imagen, 80, 370, width=70, height=45)
 
     c.drawString(80, 350, "Para: ")
     c.drawString(80, 330, "De: ")
@@ -395,7 +397,9 @@ def recepcion_report(request, id):
     c.drawString(250, 770, 'Nº')
     nro = c.drawString(270, 770, str(id))
     c.drawString(400, 790, master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 760, width=70, height=45)
+    print(settings.STATIC_ROOT)
+    archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
+    c.drawImage(archivo_imagen, 80, 760, width=70, height=45)
 
     #Table Header
     styles = getSampleStyleSheet()
@@ -444,13 +448,13 @@ def recepcion_report(request, id):
     c.drawString(250, 375,'Nº')
     nro = c.drawString(270, 375, str(id))
     c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
-    c.drawImage("static/app/images/logo.png", 80, 370, width=70, height=45)
+    c.drawImage(archivo_imagen, 80, 370, width=70, height=45)
 
     c.drawString(80, 350, "Para: ")
     c.drawString(80, 330, "De: ")
     c.setFont("Times-Roman", 12)
-    c.drawString(80, 310, str(master.departamentoDestino))
-    c.drawString(80, 290, str(master.departamentoOrigen))
+    c.drawString(110, 350, str(master.departamentoDestino))
+    c.drawString(110, 330, str(master.departamentoOrigen))
 
 
     #Detalle Tabla 2
@@ -466,9 +470,10 @@ def recepcion_report(request, id):
 
     elements.append(table)
     table.wrapOn(c, 250, 150)
-    table.drawOn(c, 80, 200)
+    table.drawOn(c, 80, 225)
 
     c.line(80, 45, 210, 45)
+    c.setFont("Times-Roman", 8)
     c.drawString(85, 30, str(master.departamentoOrigen))
 
     c.save()
