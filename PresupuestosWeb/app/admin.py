@@ -494,8 +494,12 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         #if (recepcion and recepcion.estado != self.BORRADOR):
         #    return app.reports.recepcion_report(request, recepcion_id)
         #else:
-        url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
-        return HttpResponseRedirect(url)
+        presupuesto = self.get_object(request, presupuesto_id)
+        if (presupuesto and presupuesto.estado != self.BORRADOR):
+            return app.reports.presupuesto_report(request, presupuesto_id)
+        else: 
+            url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
+            return HttpResponseRedirect(url)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         objecto = self.get_object(request, object_id)

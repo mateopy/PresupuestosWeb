@@ -35,7 +35,7 @@ def nota_pedido_report(request,id):
     c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220,790,'NOTA DE PEDIDO')
     c.drawString(250, 770,'Nº')
-    nro = c.drawString(270, 770, str(id))
+    nro = c.drawString(270, 770, str(master.nroPedido))
     print(settings.STATIC_ROOT)
     archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
     #imagen = Image(archivo_imagen, width=50, height=50,hAlign='LEFT')
@@ -100,7 +100,7 @@ def nota_pedido_report(request,id):
     c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220,380,'NOTA DE PEDIDO')
     c.drawString(250, 360,'Nº')
-    nro = c.drawString(270, 360, str(id))
+    nro = c.drawString(270, 360, str(master.nroPedido))
     c.drawString(400, 380,  master.fecha.strftime('%d-%m-%Y'))
     c.drawImage(archivo_imagen, 80, 360, width=70, height=45)
     c.drawString(80, 340,  "Para: ")
@@ -228,7 +228,7 @@ def nota_remision_report(request, id):
     c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220,790,'NOTA DE REMISIÓN')
     c.drawString(250, 770,'Nº')
-    nro = c.drawString(270, 770, str(id))
+    nro = c.drawString(270, 770, str(master.nroRemision))
     c.drawString(400, 790,  master.fecha.strftime('%d-%m-%Y'))
     print(settings.STATIC_ROOT)
     archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
@@ -284,7 +284,7 @@ def nota_remision_report(request, id):
     c.setFont("Times-Bold", 12)
     titulo1 = c.drawString(220, 390,'NOTA DE REMISIÓN')
     c.drawString(250, 375,'Nº')
-    nro = c.drawString(270, 375, str(id))
+    nro = c.drawString(270, 375, str(master.nroRemision))
     c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
     c.drawImage(archivo_imagen, 80, 370, width=70, height=45)
 
@@ -395,7 +395,7 @@ def recepcion_report(request, id):
     c.setFont("Times-Bold", 12)
     c.drawString(200,790, 'NOTA DE RECEPCIÓN')
     c.drawString(250, 770, 'Nº')
-    nro = c.drawString(270, 770, str(id))
+    nro = c.drawString(270, 770, str(master.nroRecepcion))
     c.drawString(400, 790, master.fecha.strftime('%d-%m-%Y'))
     print(settings.STATIC_ROOT)
     archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
@@ -446,7 +446,7 @@ def recepcion_report(request, id):
     c.setFont("Times-Bold", 12)
     c.drawString(200, 390,'NOTA DE RECEPCIÓN')
     c.drawString(250, 375,'Nº')
-    nro = c.drawString(270, 375, str(id))
+    nro = c.drawString(270, 375, str(master.nroRecepcion))
     c.drawString(400, 390,  master.fecha.strftime('%d-%m-%Y'))
     c.drawImage(archivo_imagen, 80, 370, width=70, height=45)
 
@@ -532,6 +532,83 @@ def recepcion_report(request, id):
     #response.write(buff.getvalue())
     #buff.close()
     #return response
+
+
+def presupuesto_report(request, id):
+
+    master = SolicitudPresupuesto.objects.get(id=id)
+    detail = master.solicitudpresupuestodetalle_set.all()
+    response = HttpResponse(content_type = 'application/pdf')
+    #pdf_name = "nota_recepcion.pdf" 
+    #response['Content-Disposition'] = 'attachment; filename=%s' % pdf_name
+    elements = []
+    buffer = BytesIO()
+    #doc = getDoc(buff,'nota de pedido')
+    c = canvas.Canvas(buffer, pagesize=A4)
+
+    #Header
+    c.setTitle("Solicitud Presupuesto")
+    c.setLineWidth(.3)
+    c.setFont("Times-Bold", 12)
+    c.drawString(200,790, 'SOLICITUD PRESUPUESTO')
+    c.drawString(250, 770, 'Nº')
+    nro = c.drawString(270, 770, str(master.nroPresupuesto))
+    c.drawString(400, 790, master.fecha.strftime('%d-%m-%Y'))
+    print(settings.STATIC_ROOT)
+    archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
+    c.drawImage(archivo_imagen, 80, 760, width=70, height=45)
+
+    #Table Header
+    styles = getSampleStyleSheet()
+    styleBH = styles["Normal"]
+    styleBH.alignment = TA_CENTER
+    styleBH.fontSize = 8
+    
+    
+    parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 12,fontName="Times-Roman")
+    headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
+    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
+    
+    c.setFont("Times-Bold", 12)
+    #c.drawString(80, 740, "Para: ")
+    c.drawString(80, 720, "Ref. Pedido: ")
+    c.drawString(80, 705, "Proveedor.: ")
+    c.drawString(80, 690, "Fecha Entrega: ")
+    c.setFont("Times-Roman", 12)
+    c.drawString(160, 720, str(master.pedido))
+    c.drawString(160, 705, str(master.proveedor))
+    c.drawString(160, 690, str(master.fechaEntrega))
+    
+    elements.append(headings)
+    elements.append(results)
+
+    #Detalle Tabla
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
+    table.setStyle(TableStyle(
+                        [ ('GRID', (0, 0), (4, -3), 1, colors.black),
+                        ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                        ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                        ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                        ]
+                    ))
+
+    elements.append(table)
+    table.wrapOn(c, 600, 500)
+    table.drawOn(c, 80, 600)
+
+    c.setFont("Times-Roman", 8)
+    c.line(80, 450, 210, 450)
+    c.drawString(85, 440, "Gerente de Área")
+
+    
+
+    c.save()
+    pdf = buffer.getvalue()
+    buffer.close()
+    response.write(pdf)
+    return response
+
 
 
 def getDoc(buff, title):
