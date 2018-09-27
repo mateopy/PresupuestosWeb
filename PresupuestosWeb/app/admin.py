@@ -451,16 +451,25 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
             path('procesar/(<int:presupuesto_id>)/', self.admin_site.admin_view(self.confirmar_presupuesto), name='presupuesto_confirmar'),
-            path('imprimir/(<int:presupuesto_id>)/', self.admin_site.admin_view(self.imprimir_presupuesto), name='presupuesto_imprimir'),]
+            path('imprimir/<int:presupuesto_id>/', self.admin_site.admin_view(self.imprimir_presupuesto), name='presupuesto_imprimir'),]
         return custom_urls + urls
 
     def accion_presupuesto(self, obj):
-        a =  format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
-            '<a class="button" href="{}" target="_blank">Imprimir</a>',
-            reverse('admin:presupuesto_confirmar', args=[obj.pk]),
-            reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
-        print (a)
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Confirmar</a>&nbsp;', 
+                                     reverse('admin:presupuesto_confirmar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:presupuesto_imprimir', args=[obj.pk]),)
+
+        if (objeto and objeto.estado == self.BORRADOR): 
+            botones = botonConfirmar
+        if (objeto and objeto.estado == self.PROCESADO): 
+            botones = botonImprimir
+
+        a = botones         
+        
         return a
+
     accion_presupuesto.short_description = 'Procesar'
     accion_presupuesto.allow_tags = True
 
@@ -495,6 +504,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         #    return app.reports.recepcion_report(request, recepcion_id)
         #else:
         presupuesto = self.get_object(request, presupuesto_id)
+
         if (presupuesto and presupuesto.estado != self.BORRADOR):
             return app.reports.presupuesto_report(request, presupuesto_id)
         else: 
@@ -527,6 +537,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
                 inline.can_delete = True
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
 
     def has_add_permission(self, request):
         if self.READ_ONLY:
