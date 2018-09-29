@@ -418,22 +418,70 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
     fields = ('fecha','usuario','nroPresupuesto','pedido','proveedor','fechaEntrega','terminosCondiciones','plazoPago','moneda','total','estado')
     read_only_fields = ('fecha','estado',)
     ordering = ['nroPresupuesto']
+    actions = ('generar_orden_compra',)
     #list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
 
     class Media:
         js = ("app/scripts/admin.js",)
+
+    def generar_orden_compra(self, request, queryset):
+        contador = 0
+        for presupuesto in queryset:
+            try:
+                compra = OrdenCompra()
+                compra.fecha = timezone.localtime(timezone.now())
+                compra.nroOrdenCompra = 0
+                compra.pedido = presupuesto.pedido
+                compra.proveedor = presupuesto.proveedor
+                compra.fechaEntrega = presupuesto.fechaEntrega
+                compra.terminosCondiciones = presupuesto.terminosCondiciones
+                compra.plazoPago = presupuesto.plazoPago
+                compra.moneda = presupuesto.moneda
+                compra.total = presupuesto.total
+                compra.estado = self.BORRADOR
+                compra.usuario = request.user
+                compra.save()
+                for inline in presupuesto.solicitudpresupuestodetalle_set.all():
+                    detalle = OrdenCompraDetalle()
+                    detalle.notaCompra = compra
+                    detalle.cantidad = inline.cantidad
+                    detalle.precio = inline.precio
+                    detalle.unidadMedida = inline.unidadMedida
+                    detalle.articulo = inline.articulo
+                    detalle.descripcion = inline.descripcion
+                    detalle.subtotal = inline.subtotal
+                    detalle.moneda = compra.moneda
+                    detalle.save()
+                contador+=1
+                #OrdenCompra.objects.filter(nro=pedido.nroPedido).update(estado=self.PROCESADO,fecha=timezone.localtime(timezone.now()))
+            except Exception as e:
+                self.message_user(request, str(e))
+                self.message_user(request, "Ocurrio un error durante la generacion, verificar presupuestos")
+        if contador == 1:
+            mensaje = "1 Orden de Compra Generada"
+        else:
+            mensaje = "%s Ordenes de Compra Generadas " % contador
+        self.message_user(request,"%s Satisfactoriamente" % mensaje)
+    generar_orden_compra.short_description = "Generar Orden/es de Compra"
+
 
     def save_formset(self, request, form, formset, change):
         inlines = formset.save(commit=False)
         for inline in inlines:
             inline.moneda = self.objeto.moneda
             inline.save()
-
+    
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
+        total = 0.0
+        if obj:
+            for inline in obj.solicitudpresupuestodetalle_set.all():
+                total += inline.subtotal
+            obj.total = total
+            obj.save()
         self.objeto = obj
 
-
+    
     def get_form(self, request, obj = None, **kwargs):
         form = super().get_form(request, obj, **kwargs)
         if (not obj and form.base_fields):
@@ -517,24 +565,25 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         if (objecto and objecto.estado != self.BORRADOR):
             self.READ_ONLY = True
             extra_context = extra_context or {}
-            extra_context['show_save_and_continue'] = False
-            extra_context['show_delete'] = False
-            extra_context['show_save'] = False
-            extra_context['show_save_and_add_another'] = False
+            #extra_context['show_save_and_continue'] = False
+            #extra_context['show_delete'] = False
+            #extra_context['show_save'] = False
+            #extra_context['show_save_and_add_another'] = False
             variables = []
             for field in self.get_fields(request):
                 variables.append(field)
             self.readonly_fields = tuple(variables)
 
             for inline in self.inlines:
-                inline.readonly_fields = tuple(inline.get_fields(inline, request))
-                inline.can_delete = False
+                #inline.readonly_fields = tuple(inline.get_fields(inline, request))
+                inline.readonly_fields = ('solicitudPresupuesto','articulo','descripcion','unidadMedida')
+                #inline.can_delete = False
                 inline.max_num = 0
         else:
             self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
             for inline in self.inlines:
                 #inline.readonly_fields = ('subtotal',)#inline.get_readonly_fields(inline, request)
-                inline.can_delete = True
+                #inline.can_delete = True
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
