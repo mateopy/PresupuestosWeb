@@ -13,7 +13,7 @@ JET_SIDE_MENU_ITEMS = [
             {'name':'app.solicitudpresupuesto'},
             {'name':'app.ordencompra'},
             {'name':'app.facturacompra'},
-            {'name':'app.proveedor'},
+            
         ]
     },
     {'label':'Articulos','items':[
@@ -23,7 +23,7 @@ JET_SIDE_MENU_ITEMS = [
             {'name':'app.unidadmedida'},
         ]
     },
-    {'label':'Datos Maestros','items':[
+    {'label':'Mantenimiento','items':[
             {'name':'app.sucursal'},
             {'name':'app.departamento'},
             {'name':'app.departamentosucursal'},
