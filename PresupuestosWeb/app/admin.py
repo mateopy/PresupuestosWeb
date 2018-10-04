@@ -128,6 +128,36 @@ class NotaPedidoAdmin(Nota):
         return HttpResponseRedirect(url)
     procesar.short_description = "Actualizar Estado A Procesado"
 
+    def generar_presupuesto(self, request, queryset):
+        contador = 0
+        for pedido in queryset:
+            try:
+                presupuesto = SolicitudPresupuesto()
+                presupuesto.fecha = timezone.localtime(timezone.now())
+                presupuesto.nroPresupuesto = 0
+                presupuesto.pedido = pedido
+                presupuesto.estado = self.BORRADOR
+                presupuesto.usuario = request.user
+                presupuesto.save()
+                for inline in pedido.notapedidodetalle_set.all():
+                    detalle = SolicitudPresupuestoDetalle()
+                    detalle.solicitudPresupuesto = presupuesto
+                    detalle.cantidad = inline.cantidad
+                    detalle.unidadMedida = inline.unidadMedida
+                    detalle.articulo = inline.articulo
+                    detalle.save()
+                contador+=1
+                #OrdenCompra.objects.filter(nro=pedido.nroPedido).update(estado=self.PROCESADO,fecha=timezone.localtime(timezone.now()))
+            except Exception as e:
+                #self.message_user(request, str(e))
+                self.message_user(request, "Ocurrio un error durante la generacion, verificar pedidos")
+        if contador == 1:
+            mensaje = "1 Presupuesto Generado"
+        else:
+            mensaje = "%s Presupuestos Generados " % contador
+        self.message_user(request,"%s Satisfactoriamente" % mensaje)
+    generar_presupuesto.short_description = "Generar Presupuesto/s"
+
     def get_urls(self):
         urls = super().get_urls()
         custom_urls = [#url(r'^$', app.views.home, name='home')
@@ -160,7 +190,7 @@ class NotaPedidoAdmin(Nota):
             if (pedido.estado == self.BORRADOR):
                 pedido.estado = self.EN_PROCESO
                 lastObject = self.get_max_object(request, NotaPedido, 'nroPedido')
-                pedido.nroPedido = int(lastObject.nroPedido+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                pedido.nroPedido = int(lastObject.nroPedido+1) if lastObject.nroPedido != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 pedido.save()
             else:
                 self.message_user(request, "Pedido ya se encuentra en proceso")
@@ -257,7 +287,7 @@ class NotaRemisionAdmin(Nota):
             if (remision.estado == self.BORRADOR):
                 remision.estado = self.EN_PROCESO
                 lastObject = self.get_max_object(request, NotaRemision, 'nroRemision')
-                remision.nroRemision = int(lastObject.nroRemision+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                remision.nroRemision = int(lastObject.nroRemision+1) if lastObject.nroRemision != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 remision.save()
             else:
                 self.message_user(request, "Remision Ya Procesada")
@@ -335,7 +365,7 @@ class RecepcionAdmin(Nota):
             if (objeto.estado != self.PROCESADO):
                 objeto.estado = self.PROCESADO
                 lastObject = self.get_max_object(request, Recepcion, 'nroRecepcion')
-                objeto.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                objeto.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject.nroRecepcion != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 objeto.fecha = timezone.localtime(timezone.now())
                 objeto.save()
                 contador += 1
@@ -371,7 +401,7 @@ class RecepcionAdmin(Nota):
             if (recepcion.estado == self.BORRADOR):
                 recepcion.estado = self.PROCESADO
                 lastObject = self.get_max_object(request, Recepcion, 'nroRecepcion')
-                recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject.nroRecepcion != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 recepcion.fecha = timezone.localtime(timezone.now())
                 recepcion.save()
             else:
@@ -453,9 +483,9 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
                     detalle.moneda = compra.moneda
                     detalle.save()
                 contador+=1
-                #OrdenCompra.objects.filter(nro=pedido.nroPedido).update(estado=self.PROCESADO,fecha=timezone.localtime(timezone.now()))
+                SolicitudPresupuesto.objects.filter(nroPresupuesto=presupuesto.nroPresupuesto).update(estado=self.PROCESADO,fecha=timezone.localtime(timezone.now()))
             except Exception as e:
-                self.message_user(request, str(e))
+                #self.message_user(request, str(e))
                 self.message_user(request, "Ocurrio un error durante la generacion, verificar presupuestos")
         if contador == 1:
             mensaje = "1 Orden de Compra Generada"
@@ -470,6 +500,7 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         for inline in inlines:
             inline.moneda = self.objeto.moneda
             inline.save()
+        self.save_model(request, self.objeto, form, change)
     
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
@@ -528,11 +559,11 @@ class SolicitudPresupuestoAdmin(admin.ModelAdmin):
             if (presupuesto.estado == self.BORRADOR):
                 presupuesto.estado = self.PROCESADO
                 lastObject = self.get_max_object(request, SolicitudPresupuesto , 'nroPresupuesto')
-                presupuesto.nroPresupuesto = int(lastObject.nroPresupuesto+1) if lastObject else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                presupuesto.nroPresupuesto = int(lastObject.nroPresupuesto+1) if lastObject.nroPresupuesto != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 presupuesto.fecha = timezone.localtime(timezone.now())
                 presupuesto.save()
             else:
-                self.message_user(request, "Recepcion Ya Procesada")
+                self.message_user(request, "Presupuesto Ya Procesado")
         url = reverse('admin:app_solicitudpresupuesto_changelist',current_app=request.resolver_match.namespace)
         return HttpResponseRedirect(url)
 
@@ -606,25 +637,354 @@ class OrdenCompraInLine(admin.TabularInline):
     model = OrdenCompraDetalle
     can_delete = True
     verbore_name_plural = 'Artículos'
-    
+    fields = ('notaCompra','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
 
 class OrdenCompraAdmin(admin.ModelAdmin):
+    BORRADOR = 'B'
+    EN_PROCESO = 'E'
+    PROCESADO = 'P'
+    READ_ONLY = False
+
     inlines = (OrdenCompraInLine,)
+    list_display = ('nroOrdenCompra','fecha','fechaEntrega','proveedor','estado','accion_compra')
+    fields = ('fecha','usuario','nroOrdenCompra','pedido','proveedor','fechaEntrega','terminosCondiciones','plazoPago','moneda','total','estado')
+    read_only_fields = ('fecha','estado',)
+    ordering = ['nroOrdenCompra']
+    actions = ('generar_factura_compra',)
 
     class Media:
         js = ("app/scripts/admin.js",)
+
+    def generar_factura_compra(self, request, queryset):
+        contador = 0
+        for compra in queryset:
+            try:
+                factura = FacturaCompra()
+                factura.fecha = timezone.localtime(timezone.now())
+                factura.nroFacturaCompra = 0
+                factura.ordenCompra = compra
+                factura.pedido = compra.pedido
+                factura.proveedor = compra.proveedor
+                factura.fechaEntrega = compra.fechaEntrega
+                factura.terminosCondiciones = compra.terminosCondiciones
+                factura.plazoPago = compra.plazoPago
+                factura.moneda = compra.moneda
+                factura.total = compra.total
+                factura.estado = self.BORRADOR
+                factura.usuario = request.user
+                factura.save()
+                for inline in compra.ordencompradetalle_set.all():
+                    detalle = FacturaCompraDetalle()
+                    detalle.facturaCompra = factura
+                    detalle.cantidad = inline.cantidad
+                    detalle.precio = inline.precio
+                    detalle.unidadMedida = inline.unidadMedida
+                    detalle.articulo = inline.articulo
+                    detalle.descripcion = inline.descripcion
+                    detalle.subtotal = inline.subtotal
+                    detalle.moneda = compra.moneda
+                    detalle.save()
+                contador+=1
+                #OrdenCompra.objects.filter(nroOrdenCompra=compra.nroOrdenCompra).update(estado=self.PROCESADO,fecha=timezone.localtime(timezone.now()))
+            except Exception as e:
+                #self.message_user(request, str(e))
+                self.message_user(request, "Ocurrio un error durante la generacion, verificar ordenes")
+        if contador == 1:
+            mensaje = "1 Factura de Compra Generada"
+        else:
+            mensaje = "%s Facturas de Compra Generadas " % contador
+        self.message_user(request,"%s Satisfactoriamente" % mensaje)
+    generar_factura_compra.short_description = "Generar Factura/s de Compra"
+
+
+    def save_formset(self, request, form, formset, change):
+        inlines = formset.save(commit=False)
+        for inline in inlines:
+            inline.moneda = self.objeto.moneda
+            inline.save()
+        self.save_model(request, self.objeto, form, change)
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        total = 0.0
+        if obj:
+            for inline in obj.ordencompradetalle_set.all():
+                total += inline.subtotal
+            obj.total = total
+            obj.save()
+        self.objeto = obj
+
+    
+    def get_form(self, request, obj = None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if (not obj and form.base_fields):
+            if not (form.base_fields['nroOrdenCompra'].initial):
+                form.base_fields['nroOrdenCompra'].initial = 0
+                form.base_fields['nroOrdenCompra'].disabled = True
+            if not (form.base_fields['usuario'].initial):
+                form.base_fields['usuario'].initial = request.user
+            form.base_fields['usuario'].widget = HiddenInput()
+            form.base_fields['total'].widget = HiddenInput()
+            form.base_fields['estado'].widget = HiddenInput()
+        return form
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [#url(r'^$', app.views.home, name='home')
+            path('procesar/(<int:orden_compra_id>)/', self.admin_site.admin_view(self.confirmar_orden_compra), name='orden_compra_confirmar'),
+            path('imprimir/<int:orden_compra_id>/', self.admin_site.admin_view(self.imprimir_orden_compra), name='orden_compra_imprimir'),]
+        return custom_urls + urls
+
+    def accion_compra(self, obj):
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Confirmar</a>&nbsp;', 
+                                     reverse('admin:orden_compra_confirmar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:orden_compra_imprimir', args=[obj.pk]),)
+
+        if (objeto and objeto.estado == self.BORRADOR): 
+            botones = botonConfirmar
+        if (objeto and objeto.estado == self.PROCESADO): 
+            botones = botonImprimir
+
+        a = botones         
+        
+        return a
+
+    accion_compra.short_description = 'Procesar'
+    accion_compra.allow_tags = True
+
+    def confirmar_orden_compra(self, request, orden_compra_id, *args, **kwargs):
+      
+        compra = self.get_object(request, orden_compra_id)
+        if (compra):
+            if (compra.estado == self.BORRADOR):
+                compra.estado = self.PROCESADO
+                lastObject = self.get_max_object(request, OrdenCompra , 'nroOrdenCompra')
+                compra.nroOrdenCompra = int(lastObject.nroOrdenCompra+1) if lastObject.nroOrdenCompra != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                compra.fecha = timezone.localtime(timezone.now())
+                compra.save()
+            else:
+                self.message_user(request, "Orden de Compra Ya Procesada")
+        url = reverse('admin:app_ordencompra_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    def get_max_object(self, request, modelo, campo):
+        #qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
+        try:
+            lastObjeto = modelo.objects.filter().latest(campo)
+        except:
+            lastObjeto = None
+
+        return lastObjeto
+
+    def imprimir_orden_compra(self, request, compra_id, *args, **kwargs):
+        compra = self.get_object(request, compra_id)
+
+        #if (compra and compra.estado != self.BORRADOR):
+        #    return app.reports.presupuesto_report(request, presupuesto_id)
+        #else: 
+        url = reverse('admin:app_ordencompra_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        objecto = self.get_object(request, object_id)
+        self.READ_ONLY = False
+        if (objecto and objecto.estado != self.BORRADOR):
+            self.READ_ONLY = True
+            extra_context = extra_context or {}
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_delete'] = False
+            extra_context['show_save'] = False
+            extra_context['show_save_and_add_another'] = False
+            variables = []
+            for field in self.get_fields(request):
+                variables.append(field)
+            self.readonly_fields = tuple(variables)
+
+            for inline in self.inlines:
+                inline.readonly_fields = tuple(inline.get_fields(inline, request))
+                #inline.readonly_fields = ('solicitudPresupuesto','articulo','descripcion','unidadMedida')
+                inline.can_delete = False
+                inline.max_num = 0
+        else:
+            self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
+            for inline in self.inlines:
+                inline.readonly_fields = []
+                inline.can_delete = True
+                inline.max_num = None
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+
+    def has_add_permission(self, request):
+        if self.READ_ONLY:
+            return False
+        return super().has_add_permission(request)
+
+    def changelist_view(self, request, extra_context = None):
+        self.READ_ONLY = False
+        self.readonly_fields = ('fecha',)
+        for inline in self.inlines:
+            inline.readonly_fields = []
+            inline.can_delete = True
+            inline.max_num = None
+        return super().changelist_view(request, extra_context)
 
 class FacturaCompraInLine(admin.TabularInline):
     model = FacturaCompraDetalle
     can_delete = True
     verbore_name_plural = 'Artículos'
+    fields = ('facturaCompra','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
     
 
 class FacturaCompraAdmin(admin.ModelAdmin):
+    BORRADOR = 'B'
+    EN_PROCESO = 'E'
+    PROCESADO = 'P'
+    READ_ONLY = False
+
     inlines = (FacturaCompraInLine,)
 
     class Media:
         js = ("app/scripts/admin.js",)
+
+    list_display = ('nroFacturaCompra','fecha','ordenCompra','proveedor','estado','accion_compra')
+    fields = ('fecha','usuario','nroFacturaCompra','pedido','proveedor','ordenCompra','plazoPago','moneda','total','estado')
+    read_only_fields = ('fecha','estado',)
+    ordering = ['nroFacturaCompra']
+
+    def save_formset(self, request, form, formset, change):
+        inlines = formset.save(commit=False)
+        for inline in inlines:
+            inline.moneda = self.objeto.moneda
+            inline.save()
+        self.save_model(request, self.objeto, form, change)
+    
+    def save_model(self, request, obj, form, change):
+        super().save_model(request, obj, form, change)
+        total = 0.0
+        if obj:
+            for inline in obj.facturacompradetalle_set.all():
+                total += inline.subtotal
+            obj.total = total
+            obj.save()
+        self.objeto = obj
+
+    
+    def get_form(self, request, obj = None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if (not obj and form.base_fields):
+            if not (form.base_fields['nroFacturaCompra'].initial):
+                form.base_fields['nroFacturaCompra'].initial = 0
+                form.base_fields['nroFacturaCompra'].disabled = True
+            if not (form.base_fields['usuario'].initial):
+                form.base_fields['usuario'].initial = request.user
+            form.base_fields['usuario'].widget = HiddenInput()
+            form.base_fields['total'].widget = HiddenInput()
+            form.base_fields['estado'].widget = HiddenInput()
+        return form
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [#url(r'^$', app.views.home, name='home')
+            path('procesar/(<int:factura_compra_id>)/', self.admin_site.admin_view(self.confirmar_factura_compra), name='factura_compra_confirmar'),
+            path('imprimir/<int:factura_compra_id>/', self.admin_site.admin_view(self.imprimir_factura_compra), name='factura_compra_imprimir'),]
+        return custom_urls + urls
+
+    def accion_compra(self, obj):
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Confirmar</a>&nbsp;', 
+                                     reverse('admin:factura_compra_confirmar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:factura_compra_imprimir', args=[obj.pk]),)
+
+        if (objeto and objeto.estado == self.BORRADOR): 
+            botones = botonConfirmar
+        if (objeto and objeto.estado == self.PROCESADO): 
+            botones = botonImprimir
+
+        a = botones         
+        
+        return a
+
+    accion_compra.short_description = 'Procesar'
+    accion_compra.allow_tags = True
+
+    def confirmar_factura_compra(self, request, factura_compra_id, *args, **kwargs):
+      
+        compra = self.get_object(request, factura_compra_id)
+        if (compra):
+            if (compra.estado == self.BORRADOR):
+                compra.estado = self.PROCESADO
+                lastObject = self.get_max_object(request, FacturaCompra , 'nroFacturaCompra')
+                compra.nroFacturaCompra = int(lastObject.nroFacturaCompra+1) if lastObject.nroFacturaCompra != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                compra.fecha = timezone.localtime(timezone.now())
+                compra.save()
+            else:
+                self.message_user(request, "Factura de Compra Ya Procesada")
+        url = reverse('admin:app_facturacompra_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    def get_max_object(self, request, modelo, campo):
+        #qpedido = NotaPedido.objects.annotate(Max('nroPedido')).filter(departamentoOrigen__sucursal=request.user.usuario.departamentoSucursal.sucursal)
+        try:
+            lastObjeto = modelo.objects.filter().latest(campo)
+        except:
+            lastObjeto = None
+
+        return lastObjeto
+
+    def imprimir_factura_compra(self, request, factura_compra_id, *args, **kwargs):
+        compra = self.get_object(request, factura_compra_id)
+
+        #if (compra and compra.estado != self.BORRADOR):
+        #    return app.reports.presupuesto_report(request, presupuesto_id)
+        #else: 
+        url = reverse('admin:app_facturacompra_changelist',current_app=request.resolver_match.namespace)
+        return HttpResponseRedirect(url)
+
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        objecto = self.get_object(request, object_id)
+        self.READ_ONLY = False
+        if (objecto and objecto.estado != self.BORRADOR):
+            self.READ_ONLY = True
+            extra_context = extra_context or {}
+            extra_context['show_save_and_continue'] = False
+            extra_context['show_delete'] = False
+            extra_context['show_save'] = False
+            extra_context['show_save_and_add_another'] = False
+            variables = []
+            for field in self.get_fields(request):
+                variables.append(field)
+            self.readonly_fields = tuple(variables)
+
+            for inline in self.inlines:
+                inline.readonly_fields = tuple(inline.get_fields(inline, request))
+                #inline.readonly_fields = ('solicitudPresupuesto','articulo','descripcion','unidadMedida')
+                inline.can_delete = False
+                inline.max_num = 0
+        else:
+            self.readonly_fields = ('fecha',) #self.get_readonly_fields(request)
+            for inline in self.inlines:
+                inline.readonly_fields = []
+                inline.can_delete = True
+                inline.max_num = None
+        return super().change_view(request, object_id, form_url, extra_context=extra_context)
+
+
+    def has_add_permission(self, request):
+        if self.READ_ONLY:
+            return False
+        return super().has_add_permission(request)
+
+    def changelist_view(self, request, extra_context = None):
+        self.READ_ONLY = False
+        self.readonly_fields = ('fecha',)
+        for inline in self.inlines:
+            inline.readonly_fields = []
+            inline.can_delete = True
+            inline.max_num = None
+        return super().changelist_view(request, extra_context)
 
 class UsuarioInLine(admin.TabularInline):
     model = Usuario
