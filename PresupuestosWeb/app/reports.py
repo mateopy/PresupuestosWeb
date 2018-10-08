@@ -47,18 +47,12 @@ def nota_pedido_report(request,id):
 
     #Table Header
     styles = getSampleStyleSheet()
-    #styleBH = styles["BodyText"]
-    #styleBH.alignment = TA_CENTER
-    #styleBH.fontSize = 12
-
-    
-    #styleN.alignment = TA_LEFT
-    styleBH = styles["Normal"]
+    styleBH = styles["BodyText"]
     styleBH.alignment = TA_CENTER
     styleBH.fontSize = 12
     
     
-    parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 8,fontName="Times-Roman")
+    #parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 8,fontName="Times-Roman")
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
     results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
     
@@ -76,21 +70,15 @@ def nota_pedido_report(request,id):
     
     
     #Detalle Tabla
-    #for i in range(1, 10):
-    styles = getSampleStyleSheet()
-    styleN = styles["BodyText"]
     table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.18*inch,splitByRow=10)
     table.setStyle(TableStyle(
                         [
                             ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
-                            ('FONT', (0,0), (-1,0), 'Times-Bold'),
                             ('GRID', (0, 0), (4, -3), 1, colors.black),
-                            ('FONT', (0,0), (-1,0), 'Times-Roman'),
                             ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
                             ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
                             ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
-                            ('FONTSIZE', (0,0),(-1,-1), 8), 
                             ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
