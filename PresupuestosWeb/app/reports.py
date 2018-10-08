@@ -705,7 +705,7 @@ def ocompra_report(request, id):
     c.drawString(165, 720, str(master.fechaEntrega))
     c.drawString(400, 720, str(master.moneda))
     #c.drawString(480, 240, '{:,}'.format(master.total) )
-    c.drawString(480, 240, Decimal(master.total).quantize(Decimal('1.000')) )
+    c.drawString(480, 240, str(master.total) )
     c.drawString(80, 200, str(master.plazoPago))
     c.drawString(330, 220, str(master.terminosCondiciones))
     c.drawString(150, 180, str(master.pedido))

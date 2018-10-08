@@ -778,14 +778,14 @@ class OrdenCompraAdmin(admin.ModelAdmin):
 
         return lastObjeto
 
-    def imprimir_orden_compra(self, request, compra_id, *args, **kwargs):
-        compra = self.get_object(request, compra_id)
+    def imprimir_orden_compra(self, request, orden_compra_id, *args, **kwargs):
+        compra = self.get_object(request, orden_compra_id)
 
-        #if (compra and compra.estado != self.BORRADOR):
-        #    return app.reports.presupuesto_report(request, presupuesto_id)
-        #else: 
-        url = reverse('admin:app_ordencompra_changelist',current_app=request.resolver_match.namespace)
-        return HttpResponseRedirect(url)
+        if (compra and compra.estado != self.BORRADOR):
+            return app.reports.ocompra_report(request, orden_compra_id)
+        else:
+            url = reverse('admin:app_ordencompra_changelist',current_app=request.resolver_match.namespace)
+            return HttpResponseRedirect(url)
 
     def change_view(self, request, object_id, form_url='', extra_context=None):
         objecto = self.get_object(request, object_id)
