@@ -85,6 +85,7 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="app\templates\app\admin\base_site.html" />
+    <Content Include="app\templates\app\module.html" />
     <Content Include="app\templates\app\pedidos\nuevo.html" />
     <Content Include="app\templates\app\pedidos\pedidos.html" />
     <Content Include="requirements.txt" />

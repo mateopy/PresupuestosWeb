@@ -15,13 +15,13 @@ $(document).ready(function () {
 
     $(".field-cantidad input").change(function () {
         id = $(this).parent().parent().attr('id');
-        console.log(id);
+        //console.log(id);
         actualizarTotal(id);
     });
 
     $(".field-precio input").change(function () {
         id = $(this).parent().parent().attr('id');
-        console.log(id);
+        //console.log(id);
         actualizarTotal(id);
     });
 
