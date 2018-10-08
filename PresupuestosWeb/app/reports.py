@@ -674,9 +674,9 @@ def ocompra_report(request, id):
     c.drawString(250, 770, 'Nº')
     nro = c.drawString(270, 770, str(master.nroOrdenCompra))
     c.drawString(400, 790, master.fecha.strftime('%d-%m-%Y'))
-    #print(settings.STATIC_ROOT)
-    #archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
-    #c.drawImage(archivo_imagen, 80, 760, width=70, height=45)
+    print(settings.STATIC_ROOT)
+    archivo_imagen = settings.STATIC_ROOT+'/app/images/logo.png'
+    c.drawImage(archivo_imagen, 80, 760, width=70, height=45)
 
     #Table Header
     styles = getSampleStyleSheet()
