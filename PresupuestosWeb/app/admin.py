@@ -176,10 +176,28 @@ class NotaPedidoAdmin(Nota):
 
     # metodo para agregar el boton en el list del pedido
     def accion_pedido(self, obj):
+
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Enviar</a>&nbsp;', 
+                                     reverse('admin:pedido_enviar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:pedido_imprimir', args=[obj.pk]),)
+
+        if (objeto and (objeto.estado == self.BORRADOR)): 
+            botones = botonConfirmar
+        if (objeto and (objeto.estado == self.PROCESADO or objeto.estado == self.EN_PROCESO)): 
+            botones = botonImprimir
+
+        a = botones         
+        
+        return a
+        
+        """
         return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
             '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:pedido_enviar', args=[obj.pk]),
             reverse('admin:pedido_imprimir', args=[obj.pk]),)
+        """
     accion_pedido.short_description = 'Procesar'
     accion_pedido.allow_tags = True
 
@@ -273,10 +291,26 @@ class NotaRemisionAdmin(Nota):
         return custom_urls + urls
 
     def accion_remision(self, obj):
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Enviar</a>&nbsp;', 
+                                     reverse('admin:remision_enviar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:remision_imprimir', args=[obj.pk]),)
+
+        if (objeto and (objeto.estado == self.BORRADOR)): 
+            botones = botonConfirmar
+        if (objeto and (objeto.estado == self.PROCESADO or objeto.estado == self.EN_PROCESO)): 
+            botones = botonImprimir
+
+        a = botones         
+        
+        return a
+        """
         return format_html('<a class="button" href="{}">Enviar</a>&nbsp;'
             '<a class="button" target="_blank" href="{}">Imprimir</a>',
             reverse('admin:remision_enviar', args=[obj.pk]),
             reverse('admin:remision_imprimir', args=[obj.pk]),)
+        """
     accion_remision.short_description = 'Procesar'
     accion_remision.allow_tags = True
 
@@ -388,10 +422,26 @@ class RecepcionAdmin(Nota):
         return custom_urls + urls
 
     def accion_recepcion(self, obj):
+        objeto = obj
+        botonConfirmar = format_html('<a class="button" href="{}">Confirmar</a>&nbsp;', 
+                                     reverse('admin:recepcion_confirmar', args=[obj.pk]),)
+        botonImprimir = format_html('<a class="button" href="{}" target="_blank">Imprimir</a>', 
+                                    reverse('admin:recepcion_imprimir', args=[obj.pk]),)
+
+        if (objeto and (objeto.estado == self.BORRADOR)): 
+            botones = botonConfirmar
+        if (objeto and (objeto.estado == self.PROCESADO or objeto.estado == self.EN_PROCESO)): 
+            botones = botonImprimir
+
+        a = botones         
+        
+        return a
+        """
         return format_html('<a class="button" href="{}">Confirmar</a>&nbsp;'
             '<a class="button" href="{}" target="_blank">Imprimir</a>',
             reverse('admin:recepcion_confirmar', args=[obj.pk]),
             reverse('admin:recepcion_imprimir', args=[obj.pk]),)
+        """
     accion_recepcion.short_description = 'Procesar'
     accion_recepcion.allow_tags = True
 
@@ -401,7 +451,10 @@ class RecepcionAdmin(Nota):
             if (recepcion.estado == self.BORRADOR):
                 recepcion.estado = self.PROCESADO
                 lastObject = self.get_max_object(request, Recepcion, 'nroRecepcion')
-                recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject.nroRecepcion != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                if not lastObject: 
+                    recepcion.nroRecepcion = int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
+                else:
+                    recepcion.nroRecepcion = int(lastObject.nroRecepcion+1) if lastObject.nroRecepcion != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 recepcion.fecha = timezone.localtime(timezone.now())
                 recepcion.save()
             else:

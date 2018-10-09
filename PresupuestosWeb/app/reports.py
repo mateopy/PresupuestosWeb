@@ -5,7 +5,7 @@ from django.http import HttpResponse
 from reportlab.platypus import SimpleDocTemplate, Paragraph, TableStyle, Image, Spacer, TableStyle  
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
-from reportlab.lib.units import cm,inch
+from reportlab.lib.units import cm,inch,mm
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.platypus import Table
@@ -14,7 +14,8 @@ from reportlab.pdfgen import canvas
 from PresupuestosWeb import settings
 from app.models import *
 from django.conf.locale import *
-
+import locale
+locale.setlocale(locale.LC_ALL,'')
 
 
 
@@ -53,8 +54,7 @@ def nota_pedido_report(request,id):
     
     
     #parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 8,fontName="Times-Roman")
-    headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
-    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
+    
     
     c.setFont("Times-Bold", 12)
     c.drawString(80, 740, "Para: ")
@@ -64,13 +64,15 @@ def nota_pedido_report(request,id):
     c.drawString(295, 740, str(master.departamentoOrigen))
     c.drawString(80, 720, "Solicitamos nos provean de los siguientes: ")
 
+    headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
+    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
     elements.append(headings)
     elements.append(results)
     #c.setFont("Times-Roman", 6)
     
     
     #Detalle Tabla
-    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.18*inch,splitByRow=10)
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table.setStyle(TableStyle(
                         [
                             ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
@@ -85,8 +87,8 @@ def nota_pedido_report(request,id):
 
     #elements.append(table)
     
-    table.wrapOn(c, 600, 800)
-    table.drawOn(c, 80, 580)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 29*mm, (242*mm)-(cant_elementos*mm*5.2))
     
 
     #table.wrapOn(c, 800, 600)
@@ -128,25 +130,22 @@ def nota_pedido_report(request,id):
     c.drawString(80, 320, "Solicitamos nos provean de los siguientes: ")
 
     #Detalle Tabla 2
-    table2 = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.20*inch,splitByRow=10)
+    table2 = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table2.setStyle(TableStyle(
                         [
                             ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
-                            ('FONT', (0,0), (-1,0), 'Times-Bold'),
                             ('GRID', (0, 0), (4, -3), 1, colors.black),
-                            ('FONT', (0,0), (-1,0), 'Times-Roman'),
                             ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
                             ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                            ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
                             ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
-                            ('FONTSIZE', (0,0),(-1,-1), 8), 
                             ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
 
     #elements.append(table2)
-    table2.wrapOn(c, 800, 600)
-    table2.drawOn(c, 80, 230)
+    table2.wrapOn(c, width, height)
+    table2.drawOn(c, 29*mm, (100*mm)-(cant_elementos*mm*5.2))
    
 
     c.setFont("Times-Bold", 12)
@@ -173,72 +172,13 @@ def nota_pedido_report(request,id):
     return response
 
 
-    #headings = ('cantidad', 'unidad de medida', 'descripción')
-    #results = [(d.cantidad, d.unidadmedida, d.articulo.descripcion) for d in detail]
-    ###t=table(results,2*[0.4*inch], 3*[0.4*inch])
-
-    #titulo1 = "nota de pedido"
-    #nro = str(id)
-
-
-    #response = httpresponse(content_type='application/pdf')
-    ###pdf_name = "nota_pedido.pdf" 
-    ### response['content-disposition'] = 'attachment; filename=%s' % pdf_name
-    #buff = bytesio()
-    #doc = getdoc(buff,'nota de pedido')
-    #elements = []
-    #styles = getsamplestylesheet()
-    #parrafostyle = paragraphstyle('parrafos',alignment = ta_justify,fontsize = 12,fontname="times-roman")
-    
-    ###encabezado
-    #elements.append(tabla_encabezado(styles,titulo1,nro))
-    ###header = paragraph("listado de usuarios", styles['heading1'])
-    ###elements.append(header)
-    
-    ###cabecera
-    #elements.append(spacer(1,0.2*inch))
-    #elements.append(paragraph("<b>para: </b>" + str(master.departamentodestino),parrafostyle))
-    #elements.append(spacer(1,0.2*inch))
-    #elements.append(paragraph("<b>de: </b>" + str(master.usuario.get_full_name) + " - " + str(master.usuario.usuario.departamentosucursal),parrafostyle))
-    #elements.append(spacer(1,0.2*inch))
-    #elements.append(paragraph("solicitamos nos provean de los siguientes: ",parrafostyle))
-    #elements.append(spacer(2,0.2*inch))
-    
-    ###detalle
-    #table = table([headings] + results,colwidths=[1.35*inch, 1.35*inch, 3.5*inch], rowheights=0.25*inch)
- 
-    #table.setstyle(tablestyle(
-    #    [
-    #        ('grid', (0, 0), (4, -3), 1, colors.black),
-    #        ('innergrid', (0, 0), (-1, -1), 1, colors.black),
-    #        ('box', (0, 0), (-1, -1), 1, colors.black),
-    #        ('linebelow', (0, 0), (-1, 0), 1, colors.black),
-    #        ('background', (0, 0), (-1, 0), colors.transparent)
-    #    ]
-    #))
-    #elements.append(table)
-    #elements.append(spacer(1,2*inch))
-
-    ###pie
-    #elements.append(spacer(1,0.2*inch))
-    #elements.append(paragraph("para uso en: " + to_str(master.descripcionuso),parrafostyle))
-    #elements.append(spacer(1,0.2*inch))
-    #elements.append(paragraph("precio aproximado: " + to_str(master.precioaproximado) ,parrafostyle))
-
-
-    #doc.build(elements)
-    #response.write(buff.getvalue())
-    #buff.close()
-    #return response
-
-    #Fin Original
     
 
 def nota_remision_report(request, id):
 
     master = NotaRemision.objects.get(id=id)
     detail = master.notaremisiondetalle_set.all()
-
+    cant_elementos = len(detail)
     response = HttpResponse(content_type = 'application/pdf')
     #pdf_name = "nota_remision.pdf" 
     #response['Content-Disposition'] = 'attachment; filename=%s' % pdf_name
@@ -246,6 +186,7 @@ def nota_remision_report(request, id):
     buffer = BytesIO()
     #doc = getDoc(buff,'nota de pedido')
     c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
 
     #Header
     c.setTitle("Nota Remision")
@@ -286,19 +227,22 @@ def nota_remision_report(request, id):
     elements.append(results)
 
     #Detalle Tabla
-    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table.setStyle(TableStyle(
-                        [ ('GRID', (0, 0), (4, -3), 1, colors.black),
-                        ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                        ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                        [
+                            ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
+                            ('GRID', (0, 0), (4, -3), 1, colors.black),
+                            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                            ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
 
     elements.append(table)
-    table.wrapOn(c, 600, 500)
-    table.drawOn(c, 80, 600)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 29*mm, (230*mm)-(cant_elementos*mm*5.2))
 
     c.line(80, 440, 220, 440)
     c.setFont("Times-Roman", 8)
@@ -323,19 +267,22 @@ def nota_remision_report(request, id):
     c.drawString(80, 290, "Para los fines consiguientes estamos entregando los siguientes insumos para la Estación: ")
 
     #Detalle Tabla 2
-    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table.setStyle(TableStyle(
-                        [ ('GRID', (0, 0), (4, -3), 1, colors.black),
-                        ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                        ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                        [
+                            ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
+                            ('GRID', (0, 0), (4, -3), 1, colors.black),
+                            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                            ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
 
     elements.append(table)
-    table.wrapOn(c, 250, 200)
-    table.drawOn(c, 80, 210)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 29*mm, (92*mm)-(cant_elementos*mm*5.2))
 
     c.line(80, 35, 220, 35)
     c.setFont("Times-Roman", 8)
@@ -348,56 +295,6 @@ def nota_remision_report(request, id):
     response.write(pdf)
     return response
 
-    #headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
-    #results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
-    #titulo1 = "NOTA DE REMISION"
-    #nro = str(id)
-
-
-    #response = HttpResponse(content_type='application/pdf')
-    #pdf_name = "nota_pedido.pdf" 
-    # response['Content-Disposition'] = 'attachment; filename=%s' % pdf_name
-    #buff = BytesIO()
-    #doc = getDoc(buff,'Nota de Remisión')
-    #elements = []
-    #styles = getSampleStyleSheet()
-    #parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 12,fontName="Times-Roman")
-    
-    #ENCABEZADO
-    #elements.append(tabla_encabezado(styles,titulo1,nro))
-    #header = Paragraph("Listado de Usuarios", styles['Heading1'])
-    #elements.append(header)
-    
-    #CABECERA
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("<b>Nota de Pedido: </b>" + str(master.pedido),parrafoStyle))
-    #elements.append(Paragraph("<b>Para: </b>" + str(master.departamentoDestino),parrafoStyle))
-    #elements.append(Paragraph("<b>De: </b>" + str(master.usuario.get_full_name) + " - " + str(master.usuario.usuario.departamentoSucursal),parrafoStyle))
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("Pedidos proveidos: ",parrafoStyle))
-    #elements.append(Spacer(2,0.2*inch))
-    
-    #DETALLE
-    #table = Table([headings] + results)
-    #table.setStyle(TableStyle(
-    #    [
-    #        ('GRID', (0, 0), (3, -1), 1, colors.transparent),
-    #        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.darkblue),
-    #        ('BACKGROUND', (0, 0), (-1, 0), colors.dodgerblue)
-    #    ]
-    #))
-    #elements.append(table)
-
-    #PIE
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("Para uso en: " + to_str(master.descripcionUso),parrafoStyle))
-    #elements.append(Paragraph("Precio Aproximado: " + to_str(master.precioAproximado) ,parrafoStyle))
-
-
-    #doc.build(elements)
-    #response.write(buff.getvalue())
-    #buff.close()
-    #return response
 
     
 
@@ -407,13 +304,14 @@ def recepcion_report(request, id):
     master = Recepcion.objects.get(id=id)
     detail = master.recepciondetalle_set.all()
     response = HttpResponse(content_type = 'application/pdf')
+    cant_elementos = len(detail)
     #pdf_name = "nota_recepcion.pdf" 
     #response['Content-Disposition'] = 'attachment; filename=%s' % pdf_name
     elements = []
     buffer = BytesIO()
     #doc = getDoc(buff,'nota de pedido')
     c = canvas.Canvas(buffer, pagesize=A4)
-
+    width, height = A4
     #Header
     c.setTitle("Nota Recepcion")
     c.setLineWidth(.3)
@@ -448,19 +346,22 @@ def recepcion_report(request, id):
     elements.append(results)
 
     #Detalle Tabla
-    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table.setStyle(TableStyle(
-                        [ ('GRID', (0, 0), (4, -3), 1, colors.black),
-                        ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                        ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                        [
+                            ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
+                            ('GRID', (0, 0), (4, -3), 1, colors.black),
+                            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                            ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
 
     elements.append(table)
-    table.wrapOn(c, 600, 500)
-    table.drawOn(c, 80, 620)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 29*mm, (243*mm)-(cant_elementos*mm*5.2))
 
     c.setFont("Times-Roman", 8)
     c.line(80, 450, 210, 450)
@@ -483,19 +384,22 @@ def recepcion_report(request, id):
 
 
     #Detalle Tabla 2
-    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch])
+    table = Table([headings]+results, colWidths=[1.35*inch, 1.35*inch, 3.5*inch], rowHeights=0.2*inch,splitByRow=10)
     table.setStyle(TableStyle(
-                        [ ('GRID', (0, 0), (4, -3), 1, colors.black),
-                        ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
-                        ('BOX', (0, 0), (-1, -1), 1, colors.black),
-                        ('LINEBELOW', (0, 0), (-1, 0), 1, colors.black),
-                        ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                        [
+                            ('VALIGN', (0,0), (- 1, -1), 'BOTTOM'),
+                            ('GRID', (0, 0), (4, -3), 1, colors.black),
+                            ('INNERGRID', (0, 0), (-1, -1), 1, colors.black),
+                            ('BOX', (0, 0), (-1, -1), 1, colors.black),
+                            ('LINEABOVE', (0, 0), (-1, 0), 1, colors.black),
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.transparent),
+                            ('ALIGN', (4,0), (-1,-1), 'CENTER'),
                         ]
                     ))
 
     elements.append(table)
-    table.wrapOn(c, 250, 150)
-    table.drawOn(c, 80, 225)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 29*mm, (104*mm)-(cant_elementos*mm*5.2))
 
     c.line(80, 45, 210, 45)
     c.setFont("Times-Roman", 8)
@@ -507,56 +411,7 @@ def recepcion_report(request, id):
     response.write(pdf)
     return response
 
-    #headings = ('Cantidad', 'Unidad de Medida', 'Descripción')
-    #results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion) for d in detail]
-    #titulo1 = "RECEPCIÓN"
-    #nro = str(id)
-
-
-    #response = HttpResponse(content_type='application/pdf')
-    #pdf_name = "nota_pedido.pdf" 
-    # response['Content-Disposition'] = 'attachment; filename=%s' % pdf_name
-    #buff = BytesIO()
-    #doc = getDoc(buff,'Recepción')
-    #elements = []
-    #styles = getSampleStyleSheet()
-    #parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 12,fontName="Times-Roman")
-    
-    #ENCABEZADO
-    #elements.append(tabla_encabezado(styles,titulo1,nro))
-    #header = Paragraph("Listado de Usuarios", styles['Heading1'])
-    #elements.append(header)
-    
-    #CABECERA
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("<b>Nota de Remisión: </b>" + str(master.remision),parrafoStyle))
-    #elements.append(Paragraph("<b>Para: </b>" + str(master.departamentoDestino),parrafoStyle))
-    #elements.append(Paragraph("<b>De: </b>" + str(master.usuario.get_full_name) + " - " + str(master.usuario.usuario.departamentoSucursal),parrafoStyle))
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("Pedidos proveidos: ",parrafoStyle))
-    #elements.append(Spacer(2,0.2*inch))
-    
-    #DETALLE
-    #table = Table([headings] + results)
-    #table.setStyle(TableStyle(
-    #    [
-    #        ('GRID', (0, 0), (3, -1), 1, colors.black),
-    #        ('LINEBELOW', (0, 0), (-1, 0), 2, colors.darkblue),
-    #        ('BACKGROUND', (0, 0), (-1, 0), colors.dodgerblue)
-    #    ]
-    #))
-    #elements.append(table)
-
-    #PIE
-    #elements.append(Spacer(1,0.2*inch))
-    #elements.append(Paragraph("Para uso en: " + to_str(master.descripcionUso),parrafoStyle))
-    #elements.append(Paragraph("Precio Aproximado: " + to_str(master.precioAproximado) ,parrafoStyle))
-
-
-    #doc.build(elements)
-    #response.write(buff.getvalue())
-    #buff.close()
-    #return response
+  
 
 
 def presupuesto_report(request, id):
@@ -591,7 +446,7 @@ def presupuesto_report(request, id):
     
     parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 8,fontName="Times-Roman")
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción', 'Precio', 'Subtotal')
-    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion, d.precio, d.subtotal) for d in detail]
+    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion, formatMoneda(d.precio), formatMoneda(d.subtotal)) for d in detail]
     #elements.append(tabla_encabezado(styles,titulo1,nro))
     
     c.setFont("Times-Bold", 12)
@@ -609,7 +464,7 @@ def presupuesto_report(request, id):
     c.drawString(165, 720, str(master.fechaEntrega))
     c.drawString(400, 720, str(master.moneda))
     #c.drawString(480, 240, '{:,}'.format(master.total) )
-    c.drawString(480, 240, str(master.total))
+    c.drawString(480, 240, str(formatMoneda(master.total)))
     c.drawString(80, 200, str(master.plazoPago))
     c.drawString(330, 220, str(master.terminosCondiciones))
     c.drawString(150, 180, str(master.pedido))
@@ -687,7 +542,7 @@ def ocompra_report(request, id):
     
     parrafoStyle = ParagraphStyle('parrafos',alignment = TA_JUSTIFY,fontSize = 8,fontName="Times-Roman")
     headings = ('Cantidad', 'Unidad de Medida', 'Descripción', 'Precio', 'Subtotal')
-    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion, d.precio, d.subtotal) for d in detail]
+    results = [(d.cantidad, d.unidadMedida, d.articulo.descripcion, formatMoneda(d.precio), formatMoneda(d.subtotal)) for d in detail]
     #elements.append(tabla_encabezado(styles,titulo1,nro))
     
     c.setFont("Times-Bold", 12)
@@ -704,8 +559,8 @@ def ocompra_report(request, id):
     c.drawString(165, 740, str(master.proveedor))
     c.drawString(165, 720, str(master.fechaEntrega))
     c.drawString(400, 720, str(master.moneda))
-    #c.drawString(480, 240, '{:,}'.format(master.total) )
-    c.drawString(480, 240, str(master.total) )
+    #c.drawString(480, 240, '{:,}'.format(master.total))
+    c.drawString(480, 240, str(formatMoneda(master.total)) )
     c.drawString(80, 200, str(master.plazoPago))
     c.drawString(330, 220, str(master.terminosCondiciones))
     c.drawString(150, 180, str(master.pedido))
@@ -802,4 +657,7 @@ def to_str(s):
     if s is None:
         return ''
     return str(s)
+
+def formatMoneda(n):
+    return locale.format("%.0f", n, grouping=True)
 
