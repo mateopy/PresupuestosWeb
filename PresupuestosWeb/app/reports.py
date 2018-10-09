@@ -15,7 +15,7 @@ from PresupuestosWeb import settings
 from app.models import *
 from django.conf.locale import *
 import locale
-locale.setlocale(locale.LC_ALL,'')
+locale.setlocale(locale.LC_ALL,'es_ES.UTF-8')
 
 
 
