@@ -104,6 +104,7 @@ class NotaPedidoInLine(admin.TabularInline):
 
 class NotaPedidoPresupuestoInLine(admin.TabularInline):
     model = NotaPedidoPresupuesto
+    fields = ('presupuesto','observaciones')
     can_delete = True
     verbose_name_plural = 'Presupuestos'
     extra = 1
