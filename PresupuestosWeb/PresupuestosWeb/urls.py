@@ -1,6 +1,8 @@
 from datetime import datetime
 from django.conf.urls import url
 import django.contrib.auth.views
+from django.conf.urls.static import static
+from django.conf import settings
 
 import app.forms
 import app.views
@@ -20,7 +22,7 @@ urlpatterns = [
 
     # Examples:
     #url(r'^$', app.views.home, name='home'),
-    
+    url(r'^login-usuarios$', app.views.login_usuarios, name='login_usuarios'),
     url(r'^contact$', app.views.contact, name='contact'),
     url(r'^about', app.views.about, name='about'),
     url(r'^administracion/app/notapedido/imprimir/(?P<id>\S+)$', app.views.reporte_nota_pedido, name='reporte_nota_pedido'),
@@ -52,4 +54,4 @@ urlpatterns = [
     url(r'^administracion/', admin.site.urls),
     url(r'^$', admin.site.urls),
     url(r'^app/', include('app.urls')),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -16,6 +16,7 @@ import app.reports
 #HERENCIA
 class Nota(admin.ModelAdmin):
     BORRADOR = 'B'
+    PENDIENTE_APROBACION = 'PA'
     EN_PROCESO = 'E'
     PROCESADO = 'P'
     READ_ONLY = False
@@ -96,14 +97,20 @@ class Nota(admin.ModelAdmin):
 class NotaPedidoInLine(admin.TabularInline):
     model = NotaPedidoDetalle
     can_delete = True
-    verbose_name_plural = 'Pedidos'
+    verbose_name_plural = 'Detalle'
     #fields = ('notaPedido','cantidad','unidadMedida','articulo')
     fields = ('notaPedido','articulo','cantidad','unidadMedida')
     extra = 2
 
+class NotaPedidoPresupuestoInLine(admin.TabularInline):
+    model = NotaPedidoPresupuesto
+    can_delete = True
+    verbose_name_plural = 'Presupuestos'
+    extra = 1
+
 class NotaPedidoAdmin(Nota):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
-    inlines = (NotaPedidoInLine,)
+    inlines = (NotaPedidoInLine,NotaPedidoPresupuestoInLine)
     fields = ('fecha','usuario','nroPedido','departamentoOrigen','departamentoDestino','precioAproximado','descripcionUso','estado')
     list_display = ('nroPedido','fecha','departamentoOrigen','departamentoDestino','descripcionUso','estado','accion_pedido')
     list_filter = ['fecha','departamentoOrigen','departamentoDestino','estado']
@@ -119,9 +126,9 @@ class NotaPedidoAdmin(Nota):
                 objeto.save()
                 contador += 1
         if contador == 0:
-            self.message_user(request, "No se proceso ningun pedido, verificar estado")
+            self.message_user(request, "No se procesó ningún pedido, verificar estado")
         if contador == 1:
-            self.message_user(request, "Se proceso %s nota de pedido" %contador)
+            self.message_user(request, "Se procesó %s nota de pedido" %contador)
         if contador > 1:
             self.message_user(request, "Se procesaron %s notas de pedidos" %contador)
         url = reverse('admin:app_notapedido_changelist',current_app=request.resolver_match.namespace)
@@ -185,7 +192,7 @@ class NotaPedidoAdmin(Nota):
 
         if (objeto and (objeto.estado == self.BORRADOR)): 
             botones = botonConfirmar
-        if (objeto and (objeto.estado == self.PROCESADO or objeto.estado == self.EN_PROCESO)): 
+        if (objeto and (objeto.estado == self.PROCESADO or objeto.estado == self.EN_PROCESO or objeto.estado == self.PENDIENTE_APROBACION)): 
             botones = botonImprimir
 
         a = botones         
@@ -206,7 +213,7 @@ class NotaPedidoAdmin(Nota):
         pedido = self.get_object(request, notapedido_id)
         if (pedido):
             if (pedido.estado == self.BORRADOR):
-                pedido.estado = self.EN_PROCESO
+                pedido.estado = self.PENDIENTE_APROBACION
                 lastObject = self.get_max_object(request, NotaPedido, 'nroPedido')
                 pedido.nroPedido = int(lastObject.nroPedido+1) if lastObject.nroPedido != 0 else int(request.user.usuario.departamentoSucursal.sucursal.codigo)*10000+1
                 pedido.save()
@@ -253,7 +260,6 @@ class NotaRemisionInLine(admin.TabularInline):
     verbose_name_plural = 'Remisiones'
     #fields = ('notaRemision','cantidad','unidadMedida','articulo')
     fields = ('notaRemision','articulo','cantidad','unidadMedida')
-
 
 class NotaRemisionAdmin(Nota):
     #readonly_fields = ('fechaCreacion','fechaActualizacion')
@@ -487,7 +493,6 @@ class SolicitudPresupuestoInLine(admin.TabularInline):
     verbore_name_plural = 'Artículos'
     fields = ('solicitudPresupuesto','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
     #readonly_fields = ('subtotal',)
-    
 
 class SolicitudPresupuestoAdmin(admin.ModelAdmin):
         
@@ -889,7 +894,6 @@ class FacturaCompraInLine(admin.TabularInline):
     verbore_name_plural = 'Artículos'
     fields = ('facturaCompra','articulo','descripcion','cantidad','unidadMedida','precio','subtotal')
     
-
 class FacturaCompraAdmin(admin.ModelAdmin):
     BORRADOR = 'B'
     EN_PROCESO = 'E'
@@ -1024,7 +1028,6 @@ class FacturaCompraAdmin(admin.ModelAdmin):
                 inline.max_num = None
         return super().change_view(request, object_id, form_url, extra_context=extra_context)
 
-
     def has_add_permission(self, request):
         if self.READ_ONLY:
             return False
@@ -1047,7 +1050,18 @@ class UsuarioInLine(admin.TabularInline):
 class UsuarioAdmin(UserAdmin):
     inlines = (UsuarioInLine,)
 
-# Re-register UserAdmin
+
+class AutorizadorInLine(admin.TabularInline):
+    model = DepartamentoSucursalAutorizador
+    can_delete = True
+    extra = 1
+    verbose_name_plural = 'Autorizadores'
+
+class DepartamentoSucursalAdmin(admin.ModelAdmin):
+    inlines = (AutorizadorInLine,)
+    
+
+
 admin.site.unregister(User)
 admin.site.register(User, UsuarioAdmin)
 admin.site.register(NotaPedido,NotaPedidoAdmin)
@@ -1060,7 +1074,7 @@ admin.site.register(Articulo)
 admin.site.register(Proveedor)
 admin.site.register(Departamento)
 admin.site.register(Sucursal)
-admin.site.register(DepartamentoSucursal)
+admin.site.register(DepartamentoSucursal,DepartamentoSucursalAdmin)
 admin.site.register(TipoArticulo)
 admin.site.register(CategoriaArticulo)
 admin.site.register(UnidadMedida)

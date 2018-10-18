@@ -7,9 +7,14 @@ from datetime import datetime
 from django.shortcuts import render
 from django.http import HttpRequest
 from django.template import RequestContext
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import Permission
+from django.core.serializers.json import DjangoJSONEncoder
 from app.functions import *
 from app.reports import *
 from django.http import JsonResponse
+import json
 
 
 def reporte_nota_pedido(request,id):
@@ -99,10 +104,6 @@ def pedidos_eliminar(request,id):
     return render(request, 'app/pedidos/editar.html', {'title': 'Editar Pedido', 'form': form, 'mensaje': mensaje, 'mensajeError':mensajeError})
 
 
-
-    
-
-
 def home(request):
     """Renders the home page."""
     assert isinstance(request, HttpRequest)
@@ -152,3 +153,30 @@ def get_articulo(request):
                 'descripcion':articulo.descripcion
                 })
     return JsonResponse(data)
+
+@csrf_exempt 
+def login_usuarios(request):
+
+    if request.method == "POST":
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+                
+        user = authenticate(username=username, password=password)
+    
+        if user is not None:
+            if user.is_active:
+                permissions = get_user_permissions(user)
+                #qs_json = serializers.serialize('json', permissions)
+                #qs_json = serializers.serialize('json', list(permissions))
+                qs_json = json.dumps(list(permissions), cls=DjangoJSONEncoder)
+                return JsonResponse(qs_json,status=200,safe=False)
+                #return JsonResponse({'results': list(permissions)})
+            else:
+                JsonResponse({'error':'Usuario Inactivo'},status=400)
+        else:
+            return JsonResponse({'error':'Usuario o Contraseña no válida'},status=401)
+
+def get_user_permissions(user):
+    if user.is_superuser:
+        return Permission.objects.values_list('codename')
+    return user.user_permissions.values_list('codename').all() | Permission.objects.values_list('codename').filter(group__user=user)

@@ -15,12 +15,19 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime
 from django.utils import timezone
+import os
 
 ESTADOS_PEDIDO = (
         ('B', 'Borrador'),
+        ('PA', 'Pendiente de Aprobación'),
         ('E', 'En Proceso'),
         ('P', 'Procesado'),
     )
+
+def get_file_path_presupuesto(instance, filename):
+        ext = filename.split('.')[-1]
+        filename = "%s.%s" % ("Presupuesto-Pedido-", ext)
+        return os.path.join('uploads/presupuestos', filename)
 
 class FacturaCompra(models.Model):
     fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
@@ -31,7 +38,7 @@ class FacturaCompra(models.Model):
     plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
     moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
     total = models.FloatField(default=0)
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
     
     class Meta:
@@ -62,7 +69,7 @@ class OrdenCompra(models.Model):
     moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
     observaciones = models.CharField(max_length=200, verbose_name="Observaciones", null=True, blank=True)
     total = models.FloatField(default=0)
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
     
     class Meta:
@@ -92,7 +99,7 @@ class SolicitudPresupuesto(models.Model):
     plazoPago = models.ForeignKey('PlazoPago',on_delete=models.CASCADE,verbose_name="Plazo de Pago")
     moneda = models.ForeignKey('Moneda',on_delete=models.CASCADE,verbose_name="Moneda")
     total = models.FloatField(default=0)
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
     
     class Meta:
@@ -121,7 +128,7 @@ class NotaPedido(models.Model):
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='pedido_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
     precioAproximado = models.CharField(max_length=200, verbose_name="Precio Aproximado", null=True, blank=True)
     descripcionUso = models.CharField(max_length=200, verbose_name="Descripción Uso", null=True, blank=True)
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
     class Meta:
@@ -137,6 +144,27 @@ class NotaPedidoDetalle(models.Model):
     unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE,null=True,blank=True,verbose_name="Unidad de Medida")
     articulo = models.ForeignKey('Articulo',on_delete=models.CASCADE, verbose_name="Artículo")
 
+    class Meta:
+        verbose_name_plural = "Detalles"
+        verbose_name = "Artículo"
+
+class NotaPedidoPresupuesto(models.Model):
+    notaPedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE)
+    presupuesto = models.FileField(upload_to=get_file_path_presupuesto,null=True,blank=True)
+    observaciones = models.CharField(max_length=200, blank=True, null=True)
+
+    class Meta:
+        verbose_name_plural = "Presupuestos"
+        verbose_name = "Presupuesto"
+
+class NotaPedidoAutorizador(models.Model):
+    notaPedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+    fechaAutorizacion = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
+    ip = models.CharField(max_length=15,blank=True,null=True)
+    dispositivo = models.CharField(max_length=50,blank=True,null=True)
+    gps = models.CharField(max_length=50,blank=True,null=True)
+    hashAutorizacion = models.CharField(max_length=32)
 
 class NotaRemision(models.Model):
     fecha = models.DateField('Fecha', default=timezone.localtime(timezone.now()))
@@ -144,7 +172,7 @@ class NotaRemision(models.Model):
     pedido = models.ForeignKey('NotaPedido',on_delete=models.CASCADE, verbose_name="Nro Pedido")
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='remision_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
     class Meta:
@@ -169,7 +197,7 @@ class Recepcion(models.Model):
     remision = models.ForeignKey('NotaRemision',on_delete=models.CASCADE)
     departamentoOrigen = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_origen',on_delete=models.CASCADE, verbose_name="Departamento Origen")
     departamentoDestino = models.ForeignKey('DepartamentoSucursal', related_name='recepcion_departamento_destino',on_delete=models.CASCADE, verbose_name="Departamento Destino")
-    estado = models.CharField(max_length=1,choices=ESTADOS_PEDIDO,default='B')
+    estado = models.CharField(max_length=2,choices=ESTADOS_PEDIDO,default='B')
     usuario = models.ForeignKey(User,on_delete=models.CASCADE)
 
     class Meta:
@@ -193,8 +221,9 @@ class Articulo(models.Model):
     descripcion = models.CharField(max_length=50)
     tipoArticulo = models.ForeignKey('TipoArticulo',on_delete=models.CASCADE, verbose_name="Tipo de Artículo")
     unidadMedida = models.ForeignKey('UnidadMedida',on_delete=models.CASCADE, verbose_name="Unidad de Medida")
-    codigoBarras = models.CharField(max_length=50, verbose_name="Código de Barras")
+    codigoBarras = models.CharField(max_length=50, verbose_name="Código de Barras",blank=True,null=True)
     categoria = models.ForeignKey('CategoriaArticulo',on_delete=models.CASCADE)
+    codigoActivoFijo = models.CharField(max_length=50, verbose_name="Código Activo Fijo")
     precio = models.FloatField(default=0)
     observaciones = models.CharField(max_length=200, blank=True, null=True)
 
@@ -227,6 +256,18 @@ class DepartamentoSucursal(models.Model):
       
     def __str__(self):
         return (str((self.departamento.descripcion)) + " - " + self.sucursal.descripcion)
+
+class DepartamentoSucursalAutorizador(models.Model):
+    departamentoSucursal = models.ForeignKey('DepartamentoSucursal',on_delete=models.CASCADE)
+    usuario = models.ForeignKey(User,on_delete=models.CASCADE)
+    
+
+    class Meta:
+        verbose_name_plural = "Autorizadores por Departamento-Sucursal"
+        verbose_name = "Autorizador"
+      
+    def __str__(self):
+        return self.usuario.username
     
 
 class Departamento(models.Model):
